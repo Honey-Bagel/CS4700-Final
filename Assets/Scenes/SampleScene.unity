@@ -311,6 +311,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2128695153}
   - component: {fileID: 2128695152}
+  - component: {fileID: 2128695154}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -325,7 +326,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2128695151}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f2024d00b7274a34aa4b5174e3a647c5, type: 3}
   m_Name: 
@@ -333,12 +334,17 @@ MonoBehaviour:
   roomPrefabs:
   - {fileID: 5291059157417513377, guid: 5dc2c72e675dd8344a71b1f28dd3d6fe, type: 3}
   - {fileID: 8727222040237093610, guid: 3c2a8a57d4c0881438180f7933b249ab, type: 3}
+  - {fileID: 8727222040237093610, guid: 3f313fa1195c4064889acdb0c9235ae5, type: 3}
+  - {fileID: 8727222040237093610, guid: 237452d912f3f2a49b3d7a7b768d7cba, type: 3}
+  roomDatas:
+  - {fileID: 0}
   startRoomPrefab: {fileID: 8455731058597141984, guid: d5ba1dbde2b409b4c84053f4fb5b8b8d, type: 3}
-  numberOfRooms: 200
-  seed: 0
-  roomLayerMask:
+  numberOfRooms: 100
+  seed: 566423363
+  floorLayerMask:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
+  taggedWall: {fileID: 0}
 --- !u!4 &2128695153
 Transform:
   m_ObjectHideFlags: 0
@@ -354,3 +360,27 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2128695154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2128695151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bd2510625451c8040a7072b18c59866b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  roomPrefabs:
+  - {fileID: 5291059157417513377, guid: 5dc2c72e675dd8344a71b1f28dd3d6fe, type: 3}
+  - {fileID: 8727222040237093610, guid: 3c2a8a57d4c0881438180f7933b249ab, type: 3}
+  - {fileID: 8727222040237093610, guid: 3f313fa1195c4064889acdb0c9235ae5, type: 3}
+  - {fileID: 8727222040237093610, guid: 237452d912f3f2a49b3d7a7b768d7cba, type: 3}
+  startRoomPrefab: {fileID: 8455731058597141984, guid: d5ba1dbde2b409b4c84053f4fb5b8b8d, type: 3}
+  numberOfRooms: 10
+  seed: 5
+  roomLayerMask:
+    serializedVersion: 2
+    m_Bits: 128
+  collisions: []

@@ -20,11 +20,19 @@ public class Doorway : MonoBehaviour
     [Tooltip("Layer mask for detecting the floor")]
     public LayerMask floorLayer;
 
+    [SerializeField]
+    private Doorway connectedDoor = null;
+
     public static readonly Dictionary<string, Vector2> SocketTypeToDoorSize = new Dictionary<string, Vector2>{
         {"default", new Vector2(1.0f, 2.0f)},
         {"small", new Vector2(0.8f, 2.0f)},
         {"large", new Vector2(1.5f, 2.5f)}
     };
+
+    void Start()
+    {
+        gameObject.tag = "door";
+    }
 
     void OnValidate()
     {
@@ -32,7 +40,7 @@ public class Doorway : MonoBehaviour
         {
             doorSize = SocketTypeToDoorSize[socketType];
         }
-
+        
         if(snapToFloorEdge) {
             SnapToFloorEdge();
         }
@@ -87,4 +95,12 @@ public class Doorway : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawLine(transform.position, transform.position + transform.forward * 1f);
     }
+
+    public Doorway GetConnectedDoor() {
+        return connectedDoor;
+    }
+
+    public void SetConnecetedDoor(Doorway door) {
+        connectedDoor = door;
+    } 
 }
