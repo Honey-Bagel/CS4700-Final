@@ -21,7 +21,7 @@ public class Doorway : MonoBehaviour
     public LayerMask floorLayer;
 
     [SerializeField]
-    private Doorway connectedDoor = null;
+    public Doorway connectedDoor = null;
 
     public static readonly Dictionary<string, Vector2> SocketTypeToDoorSize = new Dictionary<string, Vector2>{
         {"default", new Vector2(1.0f, 2.0f)},

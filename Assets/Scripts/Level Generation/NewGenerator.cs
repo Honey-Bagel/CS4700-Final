@@ -65,7 +65,7 @@ public class NewGenerator : MonoBehaviour
                 List<Doorway> newRoomDoors = newRoom.GetComponentsInChildren<Doorway>().ToList();
                 if(newRoomDoors.Count == 0) {
                     Debug.Log("This prefab(" + newRoomPrefab.name + ")has no valid doors");
-                    Destroy(newRoom);
+                    DestroyImmediate(newRoom);
                     continue;
                 }
                 
@@ -117,7 +117,7 @@ public class NewGenerator : MonoBehaviour
                             if(tempCollider != null) {
                                 tempCollider.enabled = false;
                             }
-                            Destroy(tempRoom);
+                            DestroyImmediate(tempRoom);
                         }
                         roomHistory.Pop();
                         Doorway[] tempNewDoors = newRoom.GetComponentsInChildren<Doorway>();
@@ -135,7 +135,7 @@ public class NewGenerator : MonoBehaviour
                         }
 
                         rooms.Remove(newRoom);
-                        Destroy(newRoom);
+                        DestroyImmediate(newRoom);
                         openDoors = copyOpenDoors;
 
                         break;
@@ -144,7 +144,7 @@ public class NewGenerator : MonoBehaviour
 
                 // If there is not a valid door for the selected room prefab
                 potentialPrefabs.Remove(newRoomPrefab);
-                Destroy(newRoom);
+                DestroyImmediate(newRoom);
 
             } // End Potential Prefabs Count loop
 
@@ -176,6 +176,32 @@ public class NewGenerator : MonoBehaviour
 
     bool ValidDoorLocations(GameObject room)
     {
+        Doorway[] doors = room.GetComponentsInChildren<Doorway>();
+        List<List<Doorway>> validPairs = new List<List<Doorway>>();
+
+        foreach(Doorway door in doors) {
+            Vector3 origin = door.transform.position;
+            Vector3 direction = door.transform.forward;
+
+            RaycastHit hit;
+            if(!Physics.Raycast(origin, direction, out hit, 0.1f)) {
+                continue;
+            }
+            if(hit.collider.gameObject.CompareTag("door")) {
+                Doorway otherDoor = hit.collider.GetComponent<Doorway>();
+                validPairs.Add(new List<Doorway> {door, otherDoor});
+            } else {
+                return false;
+            }
+        }
+        foreach(List<Doorway> pair in validPairs) {
+            Doorway d1 = pair.ElementAt(0);
+            Doorway d2 = pair.ElementAt(1);
+            d1.connected = true;
+            d2.connected = true;
+            d1.SetConnecetedDoor(d2);
+            d2.SetConnecetedDoor(d1);
+        }
         return true;
     }
 

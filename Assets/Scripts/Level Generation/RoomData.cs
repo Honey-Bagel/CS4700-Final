@@ -5,3 +5,4 @@ public class RoomData : ScriptableObject
 {
     public GameObject roomPrefab;
 }
+
