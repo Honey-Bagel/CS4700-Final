@@ -6,12 +6,26 @@ using UnityEngine;
 
 public class NewGenerator : MonoBehaviour
 {
-    [Header("Generation Settings")]
-    public List<GameObject> roomPrefabs;
-    public GameObject startRoomPrefab;
+    // Generation Settings
+    [Tooltip("Number of rooms to generate")]
     public int numberOfRooms = 10;
+    [Tooltip("Random seed for generation (0 = random)")]
     public int seed = 0;
+    [Tooltip("Parent transform for rooms in the level")]
+    public Transform roomParent;
+    [Tooltip("Layer Mask that contains the masks that are applied to all room geometry. (for positioning)")]
     public LayerMask roomLayerMask;
+
+    // Room Prefabs
+    public List<Room> roomList = new List<Room>();
+    [Tooltip("Prefab of starting room for the level.")]
+    public GameObject startRoomPrefab;
+
+    // Debug Settings
+    [Tooltip("Should show debug information.")]
+    public bool showDebug = true;
+    [Tooltip("How long debug information will stay in scene")]
+    public float debugLineDuration = 3.0f;
 
     public List<Collider> collisions;
 
@@ -21,6 +35,23 @@ public class NewGenerator : MonoBehaviour
 
     void Start()
     {
+        GenerateDungeon();
+    }
+
+    public void GenerateDungeon()
+    {
+        ClearDungeon();
+
+        if(roomList.Count == 0) {
+            Debug.LogError("No rooms in the room list. Add one to continue.");
+            return;
+        } 
+
+        if(roomParent == null) {
+            GameObject rootObj = new GameObject("Dungeon");
+            roomParent = rootObj.transform;
+        }
+
         if(seed == 0) {
             int newSeed = Random.Range(0, int.MaxValue);
             Random.InitState(newSeed);
@@ -46,6 +77,16 @@ public class NewGenerator : MonoBehaviour
         Debug.Log("Remaining open doors: " + openDoors.Count);
     }
 
+    void ClearDungeon()
+    {
+        foreach(GameObject room in rooms) {
+            DestroyImmediate(room);
+        }
+        rooms.Clear();
+        openDoors.Clear();
+        roomHistory.Clear();
+    }
+
     bool GenerateRooms() 
     {
         if(rooms.Count >= numberOfRooms) {
@@ -53,11 +94,11 @@ public class NewGenerator : MonoBehaviour
         }
 
         while(openDoors.Count > 0 && rooms.Count < numberOfRooms) {
-            List<GameObject> potentialPrefabs = new List<GameObject>(roomPrefabs);
+            List<Room> potentialPrefabs = new List<Room>(roomList);
             Doorway selectedDoor = openDoors[0];
 
             while(potentialPrefabs.Count > 0) {
-                GameObject newRoomPrefab = potentialPrefabs[Random.Range(0, potentialPrefabs.Count)];
+                GameObject newRoomPrefab = GetRandomWeightedRoomPrefab(roomList);
                 GameObject newRoom = Instantiate(newRoomPrefab);
                 Physics.SyncTransforms();
 
@@ -143,7 +184,7 @@ public class NewGenerator : MonoBehaviour
                 } // end newRoomDoors.Count loop
 
                 // If there is not a valid door for the selected room prefab
-                potentialPrefabs.Remove(newRoomPrefab);
+                potentialPrefabs.RemoveAll(rm => rm.roomPrefab == newRoomPrefab);
                 DestroyImmediate(newRoom);
 
             } // End Potential Prefabs Count loop
@@ -230,5 +271,38 @@ public class NewGenerator : MonoBehaviour
                 openDoors.Add(door);
             }
         }
+    }
+
+    private GameObject GetRandomWeightedRoomPrefab(List<Room> availablePrefabs)
+    {
+        // Calculate the total weight
+        bool allWeightsZero = false;
+        float totalWeight = 0f;
+        foreach (var weightedRoom in availablePrefabs)
+        {
+            totalWeight += weightedRoom.weight;
+        }
+
+        if(totalWeight == 0) {
+            allWeightsZero = true;
+            totalWeight = availablePrefabs.Count;
+        }
+        
+        // Generate a random value between 0 and the total weight
+        float randomValue = Random.Range(0f, totalWeight);
+        float weightSum = 0f;
+        
+        // Find which room the random value falls into
+        foreach (var weightedRoom in availablePrefabs)
+        {
+            weightSum += allWeightsZero ? 1 : weightedRoom.weight;
+            if (randomValue <= weightSum)
+            {
+                return weightedRoom.roomPrefab;
+            }
+        }
+        
+        // Fallback (should never reach here if weights > 0)
+        return availablePrefabs[0].roomPrefab;
     }
 }

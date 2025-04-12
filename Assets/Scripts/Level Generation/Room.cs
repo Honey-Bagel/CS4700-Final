@@ -1,11 +1,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Room : MonoBehaviour
+[System.Serializable]
+public class Room
 {
-    [Tooltip("List of doorways")]
-    public List<Doorway> doors = new List<Doorway>();
-
-    private Bounds roomBounds;
-
+    [Tooltip("Room prefab.")]
+    public GameObject roomPrefab;
+    [Range(0f, 1f), Tooltip("Weight of the room. (Chance for room to be picked over others)")]
+    public float weight = 1.0f;
 }
