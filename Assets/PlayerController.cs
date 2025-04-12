@@ -4,23 +4,25 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
+
     public Camera playerCamera;
-    private float walkSpeed = 4f;
-    private float runSpeed = 8f;
-    private float gravity = .07f;
-    private float maxFallSpeed = 0.15f;
-    private float jumpForce = .04f;
+    
+    public float walkSpeed = 4f;
+    public float runSpeed = 8f;
+    public float gravity = .07f;
+    public float maxFallSpeed = 0.15f;
+    public float jumpForce = .04f;
 
 
-
+    //Should probably pull this out to a setting eventually
     private float mouseSensitivity = 1f;
+
+
     private float verticalViewClamp = 45f;
 
 
     CharacterController characterController;
-    
-    
-    public Vector3 movementVelocity = Vector3.zero;
+    private Vector3 movementVelocity = Vector3.zero;
     private float xRotation = 0;
     
     
@@ -34,6 +36,7 @@ public class PlayerController : MonoBehaviour
     void Update()
     {
 
+        //Get the current forward and right directions from the player transform
         Vector3 forwardVector = transform.TransformDirection(Vector3.forward);
         Vector3 rightVector = transform.TransformDirection(Vector3.right);
 
@@ -44,6 +47,7 @@ public class PlayerController : MonoBehaviour
         float zVelocity = (isRunning ? runSpeed : walkSpeed) * inputVector.z *Time.deltaTime;
         float yVelocity = movementVelocity.y;
         movementVelocity = (forwardVector * xVelocity) + (rightVector * zVelocity);
+
 
         if (Input.GetKey(KeyCode.Space) && characterController.isGrounded)
         {
@@ -62,13 +66,15 @@ public class PlayerController : MonoBehaviour
 
 
         characterController.Move(movementVelocity);
+        
 
-        {
-            xRotation += -Input.GetAxis("Mouse Y") * mouseSensitivity;
-            xRotation = Mathf.Clamp(xRotation, -verticalViewClamp, verticalViewClamp);
-            playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
-            transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
-        }
+        //Camera Rotation
+        
+        xRotation += -Input.GetAxis("Mouse Y") * mouseSensitivity;
+        xRotation = Mathf.Clamp(xRotation, -verticalViewClamp, verticalViewClamp);
+        playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
+        transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
+        
 
     }
 }
