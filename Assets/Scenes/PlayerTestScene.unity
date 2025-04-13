@@ -257,10 +257,9 @@ MonoBehaviour:
   playerCamera: {fileID: 1802669203}
   walkSpeed: 6
   runSpeed: 12
-  jumpPower: 7
   gravity: 10
-  lookSpeed: 1
-  lookXLimit: 45
+  maxFallSpeed: 0.15
+  jumpForce: 0.04
 --- !u!1 &194444300
 GameObject:
   m_ObjectHideFlags: 0

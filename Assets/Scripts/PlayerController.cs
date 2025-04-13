@@ -4,7 +4,7 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-
+    
     public Camera playerCamera;
     
     public float walkSpeed = 4f;
