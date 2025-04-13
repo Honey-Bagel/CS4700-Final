@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 65661614}
   m_Layer: 0
-  m_Name: root
+  m_Name: Dungeon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -376,9 +376,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd2510625451c8040a7072b18c59866b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numberOfRooms: 50
-  seed: 0
-  roomParent: {fileID: 0}
+  numberOfRooms: 20
+  seed: 5
+  roomParent: {fileID: 65661614}
   roomLayerMask:
     serializedVersion: 2
     m_Bits: 256
@@ -393,5 +393,6 @@ MonoBehaviour:
     weight: 0
   startRoomPrefab: {fileID: 8455731058597141984, guid: d5ba1dbde2b409b4c84053f4fb5b8b8d, type: 3}
   showDebug: 1
+  showLogs: 1
   debugLineDuration: 3
   collisions: []

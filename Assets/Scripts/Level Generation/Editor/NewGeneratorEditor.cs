@@ -20,6 +20,7 @@ public class NewGeneratorEditor : Editor
     private SerializedProperty roomListProp;
     // Debug Props
     private SerializedProperty showDebugProp;
+    private SerializedProperty showLogsProp;
     private SerializedProperty debugLineDurationProp;
 
     private void OnEnable()
@@ -32,6 +33,7 @@ public class NewGeneratorEditor : Editor
         startRoomPrefabProp = serializedObject.FindProperty("startRoomPrefab");
         roomParentProp = serializedObject.FindProperty("roomParent");
         showDebugProp = serializedObject.FindProperty("showDebug");
+        showLogsProp = serializedObject.FindProperty("showLogs");
         debugLineDurationProp = serializedObject.FindProperty("debugLineDuration");
         roomListProp = serializedObject.FindProperty("roomList");
     }
@@ -111,6 +113,7 @@ public class NewGeneratorEditor : Editor
         {
             EditorGUI.indentLevel++;
 
+            EditorGUILayout.PropertyField(showLogsProp);
             EditorGUILayout.PropertyField(showDebugProp);
 
             if(showDebugProp.boolValue)

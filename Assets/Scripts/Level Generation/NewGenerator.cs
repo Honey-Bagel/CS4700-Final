@@ -24,6 +24,8 @@ public class NewGenerator : MonoBehaviour
     // Debug Settings
     [Tooltip("Should show debug information.")]
     public bool showDebug = true;
+    [Tooltip("Show debug messages")]
+    public bool showLogs = true;
     [Tooltip("How long debug information will stay in scene")]
     public float debugLineDuration = 3.0f;
 
@@ -61,7 +63,7 @@ public class NewGenerator : MonoBehaviour
         }
 
         // Spawn first room
-        GameObject startRoom = Instantiate(startRoomPrefab, Vector3.zero, Quaternion.identity);
+        GameObject startRoom = Instantiate(startRoomPrefab, Vector3.zero, Quaternion.identity, roomParent);
         rooms.Add(startRoom);
         roomHistory.Push(startRoom);
         // Add first room's door
@@ -99,13 +101,13 @@ public class NewGenerator : MonoBehaviour
 
             while(potentialPrefabs.Count > 0) {
                 GameObject newRoomPrefab = GetRandomWeightedRoomPrefab(roomList);
-                GameObject newRoom = Instantiate(newRoomPrefab);
+                GameObject newRoom = Instantiate(newRoomPrefab, roomParent);
                 Physics.SyncTransforms();
 
                 // Get all the possible doors for this new room
                 List<Doorway> newRoomDoors = newRoom.GetComponentsInChildren<Doorway>().ToList();
                 if(newRoomDoors.Count == 0) {
-                    Debug.Log("This prefab(" + newRoomPrefab.name + ")has no valid doors");
+                    Debug.LogWarning("This prefab(" + newRoomPrefab.name + ")has no valid doors");
                     DestroyImmediate(newRoom);
                     continue;
                 }
@@ -208,10 +210,18 @@ public class NewGenerator : MonoBehaviour
                 if(collision == roomCollider) {
                     continue;
                 }
-                Debug.Log("Collided with something and couldn't spawn");
                 return false;
             }
         }
+
+        Vector3 startRoomPos = rooms[0].transform.position;
+        Vector3 newRoomPos = room.transform.position;
+
+        bool alignedX = Mathf.Abs(newRoomPos.x - startRoomPos.x) < 0.1f;
+        if(alignedX) { // If a room is in lign with the start room, reject the new room
+            return false;
+        }
+
         return true;
     }
 
