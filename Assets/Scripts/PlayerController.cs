@@ -81,12 +81,13 @@ public class PlayerController : MonoBehaviour
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hitInfo;
 
-            if (Physics.Raycast(ray, out hitInfo, 3)){
+            if (Physics.Raycast(ray, out hitInfo, 2)){
 
                 PickableItem item = hitInfo.collider.gameObject.GetComponent<PickableItem>();
 
                 if (item != null) {
-                    //TODO: Pickup interaction
+                    print("pick up " + item.name);
+                    //TODO: Pickup interaction w/ InventoryHandler, delete this obj
                 }
 
             }

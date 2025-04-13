@@ -5,9 +5,6 @@ using UnityEngine;
 public class PickableItem : MonoBehaviour
 {
     // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
+    public InventoryItem_SO inventoryItemSO;
 
 }
