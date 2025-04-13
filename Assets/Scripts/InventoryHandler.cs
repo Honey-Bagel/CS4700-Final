@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class InventoryHandler : MonoBehaviour {
 
-    public InventoryItem[] inventory; 
+    public static InventoryItemFrame[] inventory = new InventoryItemFrame[3];
 
-    public static int maxAmount; //how much object you can carry
-
+    
 }
