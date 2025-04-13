@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class InventoryHandler : MonoBehaviour {
 
-    public static InventoryItemFrame[] inventory = new InventoryItemFrame[3];
+    public static InventoryItemFrame[] inventory = new InventoryItemFrame[4];
     public static int selectedSlot = 1; //what the player is currently selecting to use
     //TODO have inventory contain the inventory slots somehow (in a multiplayer safe way?)
     //this will very much not work in multiplayer im assuming though im not comfortable with how references work for 
