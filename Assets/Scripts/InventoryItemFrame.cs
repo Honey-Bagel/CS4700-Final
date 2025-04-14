@@ -11,6 +11,7 @@ public class InventoryItemFrame : MonoBehaviour {
 
     void Update()
     {
+        if (itemScriptableObject == null) return;
         iconImage.sprite = itemScriptableObject.sprite;
     }
 }
