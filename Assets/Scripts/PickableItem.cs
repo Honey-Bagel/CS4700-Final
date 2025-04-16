@@ -6,5 +6,5 @@ public class PickableItem : MonoBehaviour
 {
     // Start is called before the first frame update
     public InventoryItem_SO inventoryItemSO;
-
+    public int health;
 }

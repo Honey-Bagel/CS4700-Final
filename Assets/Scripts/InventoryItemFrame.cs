@@ -6,12 +6,12 @@ using UnityEngine.UI;
 
 public class InventoryItemFrame : MonoBehaviour {
      
-    public InventoryItem_SO itemScriptableObject;
+    public InventorySlot slot;
     [SerializeField] Image iconImage;
 
     void Update()
     {
-        if (itemScriptableObject == null) return;
-        iconImage.sprite = itemScriptableObject.sprite;
+        if (slot.SOReference == null) return;
+        iconImage.sprite = slot.SOReference.sprite;
     }
 }
