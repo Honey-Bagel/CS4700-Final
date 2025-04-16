@@ -13,7 +13,6 @@ public class PlayerController : MonoBehaviour
     public float gravity = .07f;
     public float maxFallSpeed = 0.15f;
     public float jumpForce = .04f;
-    public bool pickupDebounce = false;
     public InventoryHandler playerInventory;
     //Should probably pull this out to a setting eventually
     private float mouseSensitivity = 1f;
@@ -78,8 +77,8 @@ public class PlayerController : MonoBehaviour
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
         
         // pickup interaction
-        if (Input.GetKey(KeyCode.E) && !pickupDebounce){
-            pickupDebounce = true;
+        if (Input.GetKeyDown(KeyCode.E))
+        {
 
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hitInfo;
@@ -91,12 +90,17 @@ public class PlayerController : MonoBehaviour
                 if (item != null) {
                     print("pick up " + item.name);
                     playerInventory.Equip(item);
-                    //TODO: Pickup interaction w/ InventoryHandler, delete this obj
+                    Destroy(item.gameObject);
                 }
 
             }
 
         }
-        else if (!Input.GetKey(KeyCode.E) && pickupDebounce) pickupDebounce = false; //release grab
+
+        // drop interaction
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            playerInventory.Drop();
+        }
     }
 }

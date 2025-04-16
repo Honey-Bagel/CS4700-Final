@@ -11,7 +11,12 @@ public class InventoryItemFrame : MonoBehaviour {
 
     void Update()
     {
-        if (slot.SOReference == null) return;
+        if (slot == null) return;
+        if (slot.SOReference == null) 
+        {
+            iconImage.sprite = null; //make it empty
+            return;
+        }
         iconImage.sprite = slot.SOReference.sprite;
     }
 }

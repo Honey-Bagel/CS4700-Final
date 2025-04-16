@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class InventoryHandler : MonoBehaviour {
@@ -25,6 +26,7 @@ public class InventoryHandler : MonoBehaviour {
     public void Equip(PickableItem item)
     {
         InventorySlot invSlot = inventory[selectedSlot];
+        int newSelectedSlot = selectedSlot;
         // Check if the selected slot is avalible; if so, put it in
         
         if (invSlot.SOReference != null){
@@ -34,6 +36,7 @@ public class InventoryHandler : MonoBehaviour {
                 
                 if (slot.SOReference == null){ //if it finds one, break and use that slot
                     invSlot = slot;
+                    newSelectedSlot = i;
                     break;
                 }
             }
@@ -50,14 +53,32 @@ public class InventoryHandler : MonoBehaviour {
 
         print(item.inventoryItemSO);
         print(inventory[selectedSlot]);
+        selectedSlot = newSelectedSlot;
         // reference the SO of the item to the inventoryitemframe
     }
 
     //fires when player drops object (either told or attempts to pick up an object when inventory is full, in which they will drop the currently held one)
+    //if we ever want to force an invSlot unequip
+    public void Drop(int inventorySlot)
+    {
+        InventorySlot unequippingSlot = inventory[inventorySlot];
+        if (unequippingSlot.SOReference == null) return; //if nothing then just don't do anything
+
+        GameObject thing = Instantiate(unequippingSlot.SOReference.objectPrefab, transform.position + new Vector3(0,5,0), transform.rotation);
+
+        // set references onto them
+        PickableItem reference = thing.GetComponent<PickableItem>();
+        reference.health = unequippingSlot.health;
+        //else, instantiate thing, set it in front of the player
+        //TODO: find out if this is even a good way to handle items
+
+        unequippingSlot.SOReference = null;
+        unequippingSlot.health = 0;
+    }
+
     public void Drop()
     {
-        
-        //refernec the inventoryitemframe's inventoryitem_SO reference to instantiate the object
+        Drop(selectedSlot);
     }
 
     public void Update() { // get selected 
