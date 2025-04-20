@@ -265,7 +265,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!81 &1413829860
 AudioListener:
   m_ObjectHideFlags: 0
@@ -332,6 +332,82 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
+--- !u!1 &1829403699
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1829403701}
+  - component: {fileID: 1829403700}
+  m_Layer: 0
+  m_Name: Director
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1829403700
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829403699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 61d0b82ea4eb38d4cacf6e682b5b3833, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enemyTypes:
+  - enemyPrefab: {fileID: 8552861999821530608, guid: 0f83b8970279c9c4782b3b61844c3f79, type: 3}
+    enemyData: {fileID: 0}
+    initialSpawnDelay: 0
+    spawnInterval: 10
+    maxConcurrent: 2
+    difficultyThreshold: 1
+    spawnWeight: 1
+    ignoreGlobalLimit: 0
+  - enemyPrefab: {fileID: 6792677265478119322, guid: 41e8ba3f58a8a72489d9c187edea37cb, type: 3}
+    enemyData: {fileID: 0}
+    initialSpawnDelay: 1
+    spawnInterval: 0
+    maxConcurrent: 4
+    difficultyThreshold: 5
+    spawnWeight: 1
+    ignoreGlobalLimit: 0
+  minimumRoomsFromStart: 2
+  spawnHeightOffset: 0.5
+  minDistanceFromPlayer: 10
+  minDistanceBetweenEnemies: 3
+  floorLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
+  maxGlobalEnemies: 5
+  globalSpawnInterval: 3
+  maxEnemiesPerLevel: 5
+  enablePerLevelLimit: 1
+  baseDifficulty: 1
+  difficultyIncreaseRate: 0.5
+  currentDifficulty: 1
+  maxDifficulty: 10
+--- !u!4 &1829403701
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829403699}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.49814072, y: 11.216105, z: 21.704851}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2128695151
 GameObject:
   m_ObjectHideFlags: 0
@@ -342,6 +418,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2128695153}
   - component: {fileID: 2128695154}
+  - component: {fileID: 2128695155}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -381,7 +458,7 @@ MonoBehaviour:
   roomParent: {fileID: 65661614}
   roomLayerMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 320
   roomList:
   - roomPrefab: {fileID: 5291059157417513377, guid: 5dc2c72e675dd8344a71b1f28dd3d6fe, type: 3}
     weight: 0
@@ -396,3 +473,17 @@ MonoBehaviour:
   showLogs: 1
   debugLineDuration: 3
   collisions: []
+--- !u!114 &2128695155
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2128695151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e04b6ba84a952140bd36b5b121bbc06, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  buildAsynchronously: 0
+  roomParent: {fileID: 65661614}

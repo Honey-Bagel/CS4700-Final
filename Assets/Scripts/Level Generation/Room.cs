@@ -10,3 +10,11 @@ public class Room
     public float weight = 1.0f;
     //public AnimationCurve depthWeightScale = AnimationCurve.Linear(0, 1, 1, 1); // for variable weight based on distance from start room
 }
+
+public class RoomInfo : MonoBehaviour
+{
+    [HideInInspector]
+    public int distanceFromStart = 0;
+
+    public bool isEnemySpawnAllowed = true;
+}

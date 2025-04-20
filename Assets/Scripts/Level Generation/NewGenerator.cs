@@ -29,6 +29,9 @@ public class NewGenerator : MonoBehaviour
     [Tooltip("How long debug information will stay in scene")]
     public float debugLineDuration = 3.0f;
 
+    // Events
+    public static event System.Action OnLevelGenerationComplete;
+
     public List<Collider> collisions;
 
     private List<GameObject> rooms = new List<GameObject>();
@@ -66,6 +69,10 @@ public class NewGenerator : MonoBehaviour
         GameObject startRoom = Instantiate(startRoomPrefab, Vector3.zero, Quaternion.identity, roomParent);
         rooms.Add(startRoom);
         roomHistory.Push(startRoom);
+
+        RoomInfo startRoomInfo = startRoom.AddComponent<RoomInfo>();
+        startRoomInfo.distanceFromStart = 0;
+
         // Add first room's door
         Doorway[] doors = startRoom.GetComponentsInChildren<Doorway>();
         foreach(Doorway door in doors) {
@@ -77,6 +84,10 @@ public class NewGenerator : MonoBehaviour
 
         Debug.Log("Number of rooms: " + rooms.Count);
         Debug.Log("Remaining open doors: " + openDoors.Count);
+
+        if(OnLevelGenerationComplete != null) {
+            OnLevelGenerationComplete.Invoke();
+        }
     }
 
     void ClearDungeon()
@@ -140,6 +151,10 @@ public class NewGenerator : MonoBehaviour
                     // Keep rooms list up to date
                     rooms.Add(newRoom);
                     roomHistory.Push(newRoom);
+
+                    int parentDistance = selectedDoor.transform.parent.GetComponent<RoomInfo>().distanceFromStart;
+                    RoomInfo newRoomInfo = newRoom.AddComponent<RoomInfo>();
+                    newRoomInfo.distanceFromStart = parentDistance + 1;
                     // Add the remaining doorways of the new room to the openDoors list
                     AddDoorsFromRoom(newRoom);
 
