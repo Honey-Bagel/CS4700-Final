@@ -8,6 +8,7 @@ public class InventoryHandler : MonoBehaviour {
     public static InventoryItemFrame[] inventoryFrames = new InventoryItemFrame[4];
     public static InventorySlot[] inventory = {new InventorySlot(), new InventorySlot(), new InventorySlot(), new InventorySlot()};
     public static int selectedSlot = 0; //what the player is currently selecting to use
+    public static int lastSelectedSlot = 0; //what the player last chosen
     public Canvas guiReference;
     //TODO have inventory contain the inventory slots somehow (in a multiplayer safe way?)
     //this will very much not work in multiplayer im assuming though im not comfortable with how references work for 
@@ -18,6 +19,8 @@ public class InventoryHandler : MonoBehaviour {
         for (int i = 0; i < baseReference.childCount; i++){
             inventoryFrames[i] = baseReference.GetChild(i).gameObject.GetComponent<InventoryItemFrame>();
             inventoryFrames[i].slot = inventory[i];
+            //color in inv
+            if (selectedSlot == i) inventoryFrames[i].isSelected = true;
         }
 
     }
@@ -98,6 +101,13 @@ public class InventoryHandler : MonoBehaviour {
         else if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             selectedSlot = 3;
+        }
+        
+        // color in / use image for selected obj
+        if (lastSelectedSlot != selectedSlot){
+            inventoryFrames[lastSelectedSlot].isSelected = false;
+            inventoryFrames[selectedSlot].isSelected = true;
+            lastSelectedSlot = selectedSlot;
         }
     }
 
