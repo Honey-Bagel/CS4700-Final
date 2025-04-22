@@ -15,10 +15,17 @@ TagManager:
   - Ground
   - Water
   - UI
+<<<<<<< HEAD
   - Floor
   - Room
   - RoomGeometry
   - Player
+=======
+  - HeldRender
+  - 
+  - 
+  - 
+>>>>>>> InventorySystem-(Anson)
   - 
   - 
   - 
