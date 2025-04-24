@@ -43,12 +43,12 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         
         // Listen for level generation completion
-        NewGenerator.OnLevelGenerationComplete += OnLevelGenerationComplete;
+        Generator.OnLevelGenerationComplete += OnLevelGenerationComplete;
     }
     
     private void OnDestroy()
     {
-        NewGenerator.OnLevelGenerationComplete -= OnLevelGenerationComplete;
+        Generator.OnLevelGenerationComplete -= OnLevelGenerationComplete;
     }
     
     // Player notifies us it's ready

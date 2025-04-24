@@ -18,7 +18,7 @@ public class PlayerController : MonoBehaviour, ISaveable
     //Should probably pull this out to a setting eventually
     private float mouseSensitivity = 1f;
 
-    private float verticalViewClamp = 45f;
+    private float verticalViewClamp = 90f;
 
     CharacterController characterController;
     private Vector3 movementVelocity = Vector3.zero;

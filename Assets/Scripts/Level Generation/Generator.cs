@@ -4,10 +4,10 @@ using Unity.VisualScripting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-public class NewGenerator : MonoBehaviour
+public class Generator : MonoBehaviour
 {
     // Singleton
-    public static NewGenerator Instance { get; private set; }
+    public static Generator Instance { get; private set; }
 
     public bool IsGenerationComplete { get; private set; } = false;
     public bool IsGenerationInProgress { get; private set; } = false;

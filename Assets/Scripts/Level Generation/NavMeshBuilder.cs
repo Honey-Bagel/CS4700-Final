@@ -16,12 +16,12 @@ public class NavMeshBuilder : MonoBehaviour
     
     private void OnEnable()
     {
-        NewGenerator.OnLevelGenerationComplete += OnLevelGenerated;
+        Generator.OnLevelGenerationComplete += OnLevelGenerated;
     }
 
     private void OnDisable()
     {
-        NewGenerator.OnLevelGenerationComplete -= OnLevelGenerated;
+        Generator.OnLevelGenerationComplete -= OnLevelGenerated;
     }
 
     private void OnLevelGenerated()

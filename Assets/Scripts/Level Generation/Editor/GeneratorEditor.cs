@@ -1,10 +1,10 @@
 using UnityEngine;
 using UnityEditor;
 
-[CustomEditor(typeof(NewGenerator))]
-public class NewGeneratorEditor : Editor
+[CustomEditor(typeof(Generator))]
+public class GeneratorEditor : Editor
 {
-    private NewGenerator newGenerator;
+    private Generator newGenerator;
     private bool showRoomSettings = true;
     private bool showGenerationSettings = true;
     private bool showDebugSettings = true;
@@ -25,7 +25,7 @@ public class NewGeneratorEditor : Editor
 
     private void OnEnable()
     {
-        newGenerator = (NewGenerator)target;
+        newGenerator = (Generator)target;
 
         seedProp = serializedObject.FindProperty("seed");
         roomCountProp = serializedObject.FindProperty("numberOfRooms");
