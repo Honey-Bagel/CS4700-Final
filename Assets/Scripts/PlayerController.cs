@@ -102,10 +102,9 @@ public class PlayerController : MonoBehaviour
         {
             playerInventory.Drop();
         }
-
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        else if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-
+            playerInventory.UsePrimary();
         }
     }
 }
