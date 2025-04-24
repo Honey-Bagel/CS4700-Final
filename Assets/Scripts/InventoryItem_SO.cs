@@ -11,4 +11,7 @@ public class InventoryItem_SO : ScriptableObject {
     public Sprite sprite; // for in inventory
 
     public float weight;
+
+    public Vector3 holdVector3;
+    public Quaternion holdQuaternion;
 }

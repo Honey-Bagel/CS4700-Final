@@ -71,6 +71,37 @@ public class PlayerController : MonoBehaviour, ISaveable
         playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
         
+        // pickup interaction
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+
+            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hitInfo;
+
+            if (Physics.Raycast(ray, out hitInfo, 2)){
+
+                PickableItem item = hitInfo.collider.gameObject.GetComponent<PickableItem>();
+
+                if (item != null) {
+                    print("pick up " + item.name);
+                    playerInventory.Equip(item);
+                    Destroy(item.gameObject);
+                }
+
+            }
+
+        }
+
+        // drop interaction
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            playerInventory.Drop();
+        }
+        else if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            playerInventory.UsePrimary();
+        }
+    
         // Rest of the code remains the same
         // pickup and drop interactions...
     }

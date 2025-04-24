@@ -9,7 +9,9 @@ public class InventoryHandler : MonoBehaviour {
     public static InventorySlot[] inventory = {new InventorySlot(), new InventorySlot(), new InventorySlot(), new InventorySlot()};
     public static int selectedSlot = 0; //what the player is currently selecting to use
     public static int lastSelectedSlot = 0; //what the player last chosen
-    public Canvas guiReference;
+    public Canvas guiReference; 
+    public PickableItem heldGameObject;
+    public Camera renderCamera;
     //TODO have inventory contain the inventory slots somehow (in a multiplayer safe way?)
     //this will very much not work in multiplayer im assuming though im not comfortable with how references work for 
     
@@ -22,6 +24,9 @@ public class InventoryHandler : MonoBehaviour {
             //color in inv
             if (selectedSlot == i) inventoryFrames[i].isSelected = true;
         }
+
+        // i've heard this is a bad idea but im just like ;-; rn
+        renderCamera = transform.Find("PlayerCamera").Find("ItemRenderCamera").GetComponent<Camera>();
 
     }
 
@@ -50,13 +55,15 @@ public class InventoryHandler : MonoBehaviour {
         if (invSlot.SOReference != null){
             Drop();
         }
-
+        
         invSlot.SOReference = item.inventoryItemSO;
         invSlot.health = item.health;
 
         print(item.inventoryItemSO);
         print(inventory[selectedSlot]);
+        
         selectedSlot = newSelectedSlot;
+        ChangeModel();
         // reference the SO of the item to the inventoryitemframe
     }
 
@@ -67,8 +74,19 @@ public class InventoryHandler : MonoBehaviour {
         InventorySlot unequippingSlot = inventory[inventorySlot];
         if (unequippingSlot.SOReference == null) return; //if nothing then just don't do anything
 
-        GameObject thing = Instantiate(unequippingSlot.SOReference.objectPrefab, transform.position + new Vector3(0,5,0), transform.rotation);
+        
+        Vector3 heldPos = transform.position;
+        Quaternion heldRot = transform.rotation;
+        //destroy held reference
+        if (heldGameObject != null){
+            heldPos = heldGameObject.transform.position;
+            heldRot = heldGameObject.transform.rotation;
+            Destroy(heldGameObject.gameObject);
+            heldGameObject = null;
+        }
 
+        GameObject thing = Instantiate(unequippingSlot.SOReference.objectPrefab, heldPos, heldRot);
+        //so it always renders
         // set references onto them
         PickableItem reference = thing.GetComponent<PickableItem>();
         reference.health = unequippingSlot.health;
@@ -82,6 +100,43 @@ public class InventoryHandler : MonoBehaviour {
     public void Drop()
     {
         Drop(selectedSlot);
+    }
+
+    private void ChangeModel(){
+
+        //delete the existing held model if any
+        if (heldGameObject != null){
+            Destroy(heldGameObject.gameObject);
+            heldGameObject = null;
+        }
+        
+        // reference the current equipping inventory slot
+        InventorySlot invSlot = inventory[selectedSlot];
+        if (invSlot.SOReference == null) return;
+
+        //get gameObj ref first
+        GameObject heldObj = Instantiate(invSlot.SOReference.objectPrefab, renderCamera.transform);
+        heldGameObject = heldObj.GetComponent<PickableItem>();
+
+        //make it show in held render
+        heldObj.layer = LayerMask.NameToLayer("HeldRender");
+        print(heldObj.layer);
+
+        // set held positions relative to camera
+        heldGameObject.transform.localPosition = invSlot.SOReference.holdVector3; 
+        heldGameObject.transform.localRotation = invSlot.SOReference.holdQuaternion;
+
+        //mark it as usuable so it can be used
+        PickableItem refPickable = heldGameObject.GetComponent<PickableItem>();
+        refPickable.isUsable = true;
+
+        // disable physics interactions
+        Rigidbody heldRigid = heldGameObject.GetComponent<Rigidbody>();
+        BoxCollider boxCollide = heldGameObject.GetComponent<BoxCollider>();
+        boxCollide.enabled = false;
+        heldRigid.isKinematic = false;
+        heldRigid.useGravity = false;
+
     }
 
     public void Update() { // get selected 
@@ -108,7 +163,12 @@ public class InventoryHandler : MonoBehaviour {
             inventoryFrames[lastSelectedSlot].isSelected = false;
             inventoryFrames[selectedSlot].isSelected = true;
             lastSelectedSlot = selectedSlot;
+            ChangeModel();
         }
     }
 
+    public void UsePrimary(){
+        if (heldGameObject == null) return;
+        heldGameObject.PrimaryUse();
+    }
 }
