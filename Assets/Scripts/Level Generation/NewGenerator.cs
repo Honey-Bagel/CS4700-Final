@@ -6,6 +6,12 @@ using UnityEngine;
 
 public class NewGenerator : MonoBehaviour
 {
+    // Singleton
+    public static NewGenerator Instance { get; private set; }
+
+    public bool IsGenerationComplete { get; private set; } = false;
+    public bool IsGenerationInProgress { get; private set; } = false;
+
     // Generation Settings
     [Tooltip("Number of rooms to generate")]
     public int numberOfRooms = 10;
@@ -38,8 +44,52 @@ public class NewGenerator : MonoBehaviour
     private List<Doorway> openDoors = new List<Doorway>();
     private Stack<GameObject> roomHistory = new Stack<GameObject>();
 
+    private void Awake()
+    {
+        if(Instance != null && Instance != this) {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
+
+    private void FinalizeGeneration()
+    {
+        IsGenerationComplete = true;
+        IsGenerationInProgress = false;
+
+        if(OnLevelGenerationComplete != null) {
+            OnLevelGenerationComplete.Invoke();
+        }
+    }
+
     void Start()
     {
+        if(!IsSceneBeingLoadedAsync()) {
+            StartGeneration();
+        }
+    }
+
+    private bool IsSceneBeingLoadedAsync()
+    {
+        return !UnityEngine.SceneManagement.SceneManager.GetActiveScene().isLoaded;
+    }
+
+    public void StartGeneration()
+    {
+        if(IsGenerationInProgress || IsGenerationComplete) {
+            return;
+        }
+
+        IsGenerationInProgress = true;
+        IsGenerationComplete = false;
+
+        StartCoroutine(GenerateDungeonDelayed());
+    }
+
+    private System.Collections.IEnumerator GenerateDungeonDelayed()
+    {
+        yield return null;
         GenerateDungeon();
     }
 
@@ -85,9 +135,7 @@ public class NewGenerator : MonoBehaviour
         Debug.Log("Number of rooms: " + rooms.Count);
         Debug.Log("Remaining open doors: " + openDoors.Count);
 
-        if(OnLevelGenerationComplete != null) {
-            OnLevelGenerationComplete.Invoke();
-        }
+        FinalizeGeneration();
     }
 
     void ClearDungeon()
