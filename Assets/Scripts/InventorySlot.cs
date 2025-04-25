@@ -6,5 +6,5 @@ public class InventorySlot {
 
     public InventoryItem_SO SOReference; 
     public int health;
-
+    public PickableItemState state = new PickableItemState();
 }

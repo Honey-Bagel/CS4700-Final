@@ -44,6 +44,7 @@ public static class SaveSystem
                 TotalPlaytimeMinutes = GameManager.Instance.TotalPlaytimeMinutes,
                 CurrentLevel = GameManager.Instance.CurrentLevel,
                 DeathCount = GameManager.Instance.DeathCount,
+                ScrapCount = GameManager.Instance.ScrapCount,
                 GameObjectData = gameObjectData
             };
             
@@ -89,7 +90,8 @@ public static class SaveSystem
                     GameManager.Instance.UpdateGameState(
                         saveData.CurrentLevel,
                         saveData.DeathCount,
-                        saveData.TotalPlaytimeMinutes
+                        saveData.TotalPlaytimeMinutes,
+                        saveData.ScrapCount
                     );
                     
                     Debug.Log($"Found {saveData.GameObjectData.Count} saved objects");

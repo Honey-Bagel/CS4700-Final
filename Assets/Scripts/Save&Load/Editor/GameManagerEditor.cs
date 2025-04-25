@@ -31,6 +31,7 @@ public class GameManagerEditor : Editor
             EditorGUILayout.IntField("Current Level", GameManager.Instance.CurrentLevel);
             EditorGUILayout.IntField("Death Count", GameManager.Instance.DeathCount);
             EditorGUILayout.FloatField("Total Playtime (minutes)", GameManager.Instance.TotalPlaytimeMinutes);
+            EditorGUILayout.IntField("Scrap Count", GameManager.Instance.TargetScrapCount);
             GUI.enabled = true;
         }
     }

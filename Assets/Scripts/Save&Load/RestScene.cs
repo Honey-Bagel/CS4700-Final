@@ -7,6 +7,8 @@ public class RestScene : MonoBehaviour
     
     private void Start()
     {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
         // Make sure data is loaded when entering the rest scene
         if (!SaveSystem.DoesSaveExist())
         {

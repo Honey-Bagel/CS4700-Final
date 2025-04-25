@@ -18,8 +18,15 @@ public class GameManager : MonoBehaviour
     public int CurrentLevel { get; private set; }
     [SerializeField]
     public int DeathCount { get; private set; }
+    [SerializeField]
+    public float Difficulty { get; private set; }
     public float TotalPlaytimeMinutes { get; private set; }
+    public int ScrapCount { get; private set;}
+    public int ScrapTowardsTarget { get; private set; }
     public bool IsPlayerReady { get; private set; }
+
+    [SerializeField]
+    public int TargetScrapCount { get; private set; }
     
     [Header("Scene Names")]
     [SerializeField] private string mainGameScene = "MainGame";
@@ -61,6 +68,11 @@ public class GameManager : MonoBehaviour
     // Level control
     public void CompleteLevel()
     {
+        if(ScrapCount < TargetScrapCount)
+        {
+            Debug.LogWarning("Not enough scrap");
+            return;
+        }
         CurrentLevel++;
         OnLevelCompleted?.Invoke();
         SaveGame();
@@ -69,6 +81,7 @@ public class GameManager : MonoBehaviour
     
     public void StartNextLevel()
     {
+        ScrapTowardsTarget = 0;
         SaveGame();
         LoadSceneWithTransition(mainGameScene, true, true);
     }
@@ -94,6 +107,18 @@ public class GameManager : MonoBehaviour
     {
         Debug.Log("Level generation complete, checking for player...");
         StartCoroutine(WaitToLoadSaveData());
+
+        SetupLevel();
+    }
+
+    private void SetupLevel()
+    {
+        Debug.LogWarning("Setting up level...");
+        float modifier = UnityEngine.Random.Range(0.8f, 1.2f);
+        float difficultyFactor = 1.0f + (Difficulty * 0.1f);
+        float levelFactor = 1.0f + (CurrentLevel * 0.05f);
+
+        TargetScrapCount = Mathf.RoundToInt(300 * modifier * difficultyFactor * levelFactor);
     }
     
     private IEnumerator WaitToLoadSaveData()
@@ -124,11 +149,12 @@ public class GameManager : MonoBehaviour
     public bool NeedsSaveDataLoading() => _requiresSaveDataLoading;
     
     // Update state from saved data
-    public void UpdateGameState(int level, int deaths, float playtime)
+    public void UpdateGameState(int level, int deaths, float playtime, int scrapCount)
     {
         CurrentLevel = level;
         DeathCount = deaths;
         TotalPlaytimeMinutes = playtime;
+        ScrapCount = scrapCount;
     }
 
     // Add these methods to the GameManager class
@@ -145,5 +171,22 @@ public class GameManager : MonoBehaviour
         CurrentLevel = 1;
         DeathCount = 0;
         TotalPlaytimeMinutes = 0f;
+    }
+
+    public void AddScrap(int amount)
+    {
+        ScrapTowardsTarget += amount;
+        ScrapCount += amount;
+    }
+
+    public bool RemoveScrap(int amount)
+    {
+        if (ScrapCount - amount < 0)
+        {
+            ScrapCount = 0;
+            return false;
+        }
+        ScrapCount -= amount;
+        return true;
     }
 }

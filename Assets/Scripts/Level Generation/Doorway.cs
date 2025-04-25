@@ -5,11 +5,13 @@ using UnityEngine;
 [ExecuteAlways]
 public class Doorway : MonoBehaviour
 {
+    [Tooltip("Type of door that fits this doorway")]
+    public DoorSize doorSize = DoorSize.Default;
     [Tooltip("Unique identifier for matching doorways")]
     public string socketType = "default";
 
     [Tooltip("Door dimensions: X = width, Y = height.")]
-    public Vector2 doorSize = new Vector2(1.0f, 2.0f);
+    [SerializeField] private Vector2 doorDimensions;
 
     [Tooltip("Indicates if this door is connected.")]
     public bool connected = false;
@@ -22,6 +24,9 @@ public class Doorway : MonoBehaviour
 
     [SerializeField]
     public Doorway connectedDoor = null;
+
+    [SerializeField]
+    public bool spawnDoor = true;
 
     public static readonly Dictionary<string, Vector2> SocketTypeToDoorSize = new Dictionary<string, Vector2>{
         {"default", new Vector2(1.0f, 2.0f)},
@@ -36,9 +41,19 @@ public class Doorway : MonoBehaviour
 
     void OnValidate()
     {
-        if(SocketTypeToDoorSize.ContainsKey(socketType))
+        doorDimensions = doorSize.GetDimensions();
+
+        switch(socketType.ToLower())
         {
-            doorSize = SocketTypeToDoorSize[socketType];
+            case "small":
+                doorSize = DoorSize.Small;
+                break;
+            case "large":
+                doorSize = DoorSize.Large;
+                break;
+            default:
+                doorSize = DoorSize.Default;
+                break;
         }
         
         if(snapToFloorEdge) {
@@ -89,7 +104,8 @@ public class Doorway : MonoBehaviour
         Matrix4x4 rotationMatrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
         Gizmos.matrix = rotationMatrix;
 
-        Vector3 rectSize = new Vector3(doorSize.x, doorSize.y, 0.1f);
+        // Use doorSize dimensions
+        Vector3 rectSize = new Vector3(doorSize.GetWidth(), doorSize.GetHeight(), 0.1f);
         Gizmos.DrawWireCube(Vector3.zero, rectSize);
         Gizmos.matrix = Matrix4x4.identity;
         Gizmos.color = Color.yellow;

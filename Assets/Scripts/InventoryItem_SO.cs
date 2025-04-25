@@ -9,6 +9,7 @@ public class InventoryItem_SO : ScriptableObject {
     public GameObject objectPrefab;
     public string objectName;
     public Sprite sprite; // for in inventory
+    public int objectPrice;
 
     public float weight;
 

@@ -1,5 +1,8 @@
 using System;
 using UnityEngine;
+using System.Linq;
+using UnityEngine.UI;
+using TMPro;
 
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour, ISaveable
@@ -23,6 +26,19 @@ public class PlayerController : MonoBehaviour, ISaveable
     CharacterController characterController;
     private Vector3 movementVelocity = Vector3.zero;
     private float xRotation = 0;
+
+    //Interaction stuff
+    [Header("UI Elements")]
+    public GameObject interactionTooltip;
+    public TextMeshProUGUI itemNameText;
+    public TextMeshProUGUI itemDescriptionText;
+    public RectTransform canvasRect;
+    public TextMeshProUGUI scrapCountText;
+    public TextMeshProUGUI scrapCountTarget;
+    public LayerMask interactableLayerMask;
+
+    private float interactionRange = 4f;
+    private I_Interactable currentInteractable;
     
     void Start()
     {
@@ -33,10 +49,23 @@ public class PlayerController : MonoBehaviour, ISaveable
         
         // Notify the GameManager that the player is ready
         GameManager.Instance.SetPlayerReady();
+
+        scrapCountTarget.text = GameManager.Instance.TargetScrapCount.ToString();
+
+        if(interactionTooltip != null)
+        {
+            interactionTooltip.SetActive(false);
+        }
     }
 
     void Update()
     {
+        if(scrapCountText != null)
+        {
+            scrapCountText.text = GameManager.Instance.ScrapTowardsTarget.ToString();
+        }
+            // Update scrap count in UI
+        
         // Movement code remains the same
         Vector3 forwardVector = transform.TransformDirection(Vector3.forward);
         Vector3 rightVector = transform.TransformDirection(Vector3.right);
@@ -70,6 +99,8 @@ public class PlayerController : MonoBehaviour, ISaveable
         xRotation = Mathf.Clamp(xRotation, -verticalViewClamp, verticalViewClamp);
         playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
+
+        CheckForInteractable();
         
         // pickup interaction
         if (Input.GetKeyDown(KeyCode.E))
@@ -78,16 +109,29 @@ public class PlayerController : MonoBehaviour, ISaveable
             Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit hitInfo;
 
-            if (Physics.Raycast(ray, out hitInfo, 2)){
+            Debug.DrawRay(ray.origin, ray.direction * 2, Color.red, 2f);
 
-                PickableItem item = hitInfo.collider.gameObject.GetComponent<PickableItem>();
+            if (Physics.Raycast(ray, out hitInfo, 4, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)){
 
-                if (item != null) {
-                    print("pick up " + item.name);
-                    playerInventory.Equip(item);
-                    Destroy(item.gameObject);
+                I_Interactable interactable = hitInfo.collider.gameObject.GetComponent<I_Interactable>();
+                if(interactable != null)
+                {
+                    interactable.Interact(gameObject);
+
+                    if(interactable is PickableItem item)
+                    {
+                        print("pick up " + item.name);
+                        playerInventory.Equip(item);
+                        Destroy(item.gameObject);
+
+                        currentInteractable = null;
+
+                        if(interactionTooltip != null)
+                        {
+                            interactionTooltip.SetActive(false);
+                        }
+                    }
                 }
-
             }
 
         }
@@ -101,9 +145,76 @@ public class PlayerController : MonoBehaviour, ISaveable
         {
             playerInventory.UsePrimary();
         }
-    
-        // Rest of the code remains the same
-        // pickup and drop interactions...
+    }
+
+    private void CheckForInteractable()
+    {
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hitInfo;
+
+        // Debug ray
+        Debug.DrawRay(ray.origin, ray.direction * interactionRange, Color.yellow);
+
+        if (Physics.Raycast(ray, out hitInfo, interactionRange, interactableLayerMask, QueryTriggerInteraction.Ignore))
+        {
+            I_Interactable interactable = hitInfo.collider.gameObject.GetComponent<I_Interactable>();
+            if (interactable != null)
+            {
+                // Found an interactable
+                currentInteractable = interactable;
+                
+                // Update tooltip text
+                if (interactionTooltip != null)
+                {
+                    // Set text content
+                    itemNameText.text = interactable.GetInteractableName();
+                    itemDescriptionText.text = interactable.GetInteractableDescription();
+                    
+                    // Check if the interactable has a custom tooltip anchor
+                    Vector3 tooltipPosition;
+                    Transform tooltipAnchor = interactable.GetTooltipAnchor();
+                    
+                    if (tooltipAnchor != null)
+                    {
+                        // Use the custom anchor position
+                        tooltipPosition = tooltipAnchor.position;
+                    }
+                    else
+                    {
+                        // Fall back to the default positioning method
+                        float offsetPosY = hitInfo.transform.position.y + 0.5f;
+                        tooltipPosition = new Vector3(hitInfo.transform.position.x, offsetPosY, hitInfo.transform.position.z);
+                    }
+                    
+                    // Convert world position to screen position
+                    Vector2 screenPoint = playerCamera.WorldToScreenPoint(tooltipPosition);
+                    
+                    // Convert screen position to Canvas local position
+                    Vector2 canvasPos;
+                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, null, out canvasPos);
+                    
+                    // Set tooltip position in canvas space
+                    interactionTooltip.GetComponent<RectTransform>().localPosition = canvasPos;
+                    
+                    // Make tooltip visible
+                    interactionTooltip.SetActive(true);
+                }
+            }
+            else
+            {
+                // Not looking at an interactable
+                currentInteractable = null;
+                if (interactionTooltip != null)
+                    interactionTooltip.SetActive(false);
+            }
+        }
+        else
+        {
+            // Nothing hit
+            currentInteractable = null;
+            if (interactionTooltip != null)
+                interactionTooltip.SetActive(false);
+        }
     }
     
     // ISaveable implementation

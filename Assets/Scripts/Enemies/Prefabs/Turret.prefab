@@ -181,7 +181,6 @@ MonoBehaviour:
   attackRange: 8
   movementSpeed: 0
   target: {fileID: 0}
-  swivelSpeed: 3
   heatIncreaseRate: 4
   maxHeatBuildUp: 100
   coolRate: 2
@@ -197,9 +196,10 @@ MonoBehaviour:
   minSwivelWaitTime: 2
   maxSwivelWaitTime: 5
   maxSwivelAngle: 120
+  swivelSpeed: 3
   obstacleLayerMask:
     serializedVersion: 2
-    m_Bits: 320
+    m_Bits: 321
   requireLineOfSight: 1
   sightCheckFrequency: 0.2
 --- !u!208 &4794384526894910933

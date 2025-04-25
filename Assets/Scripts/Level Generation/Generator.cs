@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using Unity.VisualScripting;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 public class Generator : MonoBehaviour
@@ -35,6 +33,20 @@ public class Generator : MonoBehaviour
     [Tooltip("How long debug information will stay in scene")]
     public float debugLineDuration = 3.0f;
 
+    // Door settings
+    public List<DoorPrefab> doorPrefabs = new List<DoorPrefab>();
+    
+    [System.Serializable]
+    public class DoorPrefab
+    {
+        public DoorSize doorSize;
+        public GameObject doorPrefab;
+        public GameObject lockedDoorPrefab;
+    }
+
+    [Header("Item Spawning")]
+    public ItemSpawner itemSpawner;
+
     // Events
     public static event System.Action OnLevelGenerationComplete;
 
@@ -55,6 +67,10 @@ public class Generator : MonoBehaviour
 
     private void FinalizeGeneration()
     {
+        if(itemSpawner != null) {
+            itemSpawner.SpawnItems(rooms);
+        }
+        
         IsGenerationComplete = true;
         IsGenerationInProgress = false;
 
@@ -120,7 +136,10 @@ public class Generator : MonoBehaviour
         rooms.Add(startRoom);
         roomHistory.Push(startRoom);
 
-        RoomInfo startRoomInfo = startRoom.AddComponent<RoomInfo>();
+        RoomInfo startRoomInfo = startRoom.GetComponent<RoomInfo>();
+        if(startRoomInfo == null) {
+            startRoomInfo = startRoom.AddComponent<RoomInfo>();
+        }
         startRoomInfo.distanceFromStart = 0;
 
         // Add first room's door
@@ -131,6 +150,8 @@ public class Generator : MonoBehaviour
 
         // Generate the rest of the rooms
         GenerateRooms();
+
+        GenerateDoors();
 
         Debug.Log("Number of rooms: " + rooms.Count);
         Debug.Log("Remaining open doors: " + openDoors.Count);
@@ -201,7 +222,10 @@ public class Generator : MonoBehaviour
                     roomHistory.Push(newRoom);
 
                     int parentDistance = selectedDoor.transform.parent.GetComponent<RoomInfo>().distanceFromStart;
-                    RoomInfo newRoomInfo = newRoom.AddComponent<RoomInfo>();
+                    RoomInfo newRoomInfo = newRoom.GetComponent<RoomInfo>();
+                    if(newRoomInfo == null) {
+                        newRoomInfo = newRoom.AddComponent<RoomInfo>();
+                    } 
                     newRoomInfo.distanceFromStart = parentDistance + 1;
                     // Add the remaining doorways of the new room to the openDoors list
                     AddDoorsFromRoom(newRoom);
@@ -260,6 +284,216 @@ public class Generator : MonoBehaviour
 
         // Could not successfully attach room to door
         return false;
+    }
+
+    void GenerateDoors()
+    {
+        // Get all doorways in all rooms
+        List<Doorway> allDoorways = new List<Doorway>();
+        foreach (GameObject room in rooms)
+        {
+            allDoorways.AddRange(room.GetComponentsInChildren<Doorway>());
+        }
+        
+        // Track processed doorways to ensure we spawn only one door per pair
+        HashSet<Doorway> processedDoorways = new HashSet<Doorway>();
+        
+        // Process connected doorways (doorway pairs)
+        foreach (Doorway doorway in allDoorways)
+        {
+            // Skip already processed doorways
+            if (processedDoorways.Contains(doorway))
+                continue;
+                    
+            if (doorway.connected && doorway.connectedDoor != null)
+            {
+                // Mark both doorways as processed
+                processedDoorways.Add(doorway);
+                processedDoorways.Add(doorway.connectedDoor);
+
+                if(doorway.spawnDoor == false || doorway.connectedDoor.spawnDoor == false)
+                    continue;
+                
+                // Find the matching door prefab for this doorway size
+                GameObject doorPrefab = GetDoorPrefabForSize(doorway.doorSize);
+                
+                if (doorPrefab != null)
+                {
+                    // Calculate the horizontal midpoint between the two doorways
+                    // but maintain the correct height for the door
+                    float midX = (doorway.transform.position.x + doorway.connectedDoor.transform.position.x) / 2f;
+                    float midZ = (doorway.transform.position.z + doorway.connectedDoor.transform.position.z) / 2f;
+                    
+                    // Use the floor height (Y) for door placement
+                    // Find the lower of the two doorway Y positions
+                    float doorY = Mathf.Min(doorway.transform.position.y, doorway.connectedDoor.transform.position.y);
+                    
+                    Vector3 doorPosition = new Vector3(midX, doorY, midZ);
+                    
+                    // Determine the correct rotation
+                    Quaternion doorRotation;
+                    
+                    // Get the direction vector between the two doorways (ignore Y)
+                    Vector3 doorwayDirection = doorway.connectedDoor.transform.position - doorway.transform.position;
+                    doorwayDirection.y = 0; // Keep it on the horizontal plane
+                    
+                    // Calculate rotation to face along this direction
+                    if (doorwayDirection != Vector3.zero)
+                    {
+                        doorRotation = Quaternion.LookRotation(doorwayDirection.normalized);
+                    }
+                    else
+                    {
+                        // Fallback if they're at the same position somehow
+                        doorRotation = doorway.transform.rotation;
+                    }
+                    
+                    // Create a parent object to hold the door
+                    GameObject doorContainer = new GameObject("DoorContainer");
+                    doorContainer.transform.SetParent(doorway.transform.parent);
+                    doorContainer.transform.position = doorPosition;
+                    doorContainer.transform.rotation = doorRotation;
+                    
+                    // Create door as child with local position offset if needed
+                    GameObject door = Instantiate(doorPrefab);
+                    door.transform.SetParent(doorContainer.transform);
+                    
+                    // Reset the local position to ensure it's centered in the doorway
+                    door.transform.localPosition = Vector3.zero;
+                    door.transform.localRotation = Quaternion.identity;
+                    
+                    // Set up the door component
+                    Door doorComponent = door.GetComponent<Door>();
+                    if (doorComponent != null)
+                    {
+                        doorComponent.doorSize = doorway.doorSize;
+                    }
+                    
+                    // Debug visualization
+                    if (showDebug)
+                    {
+                        Debug.DrawLine(doorway.transform.position, doorway.connectedDoor.transform.position, Color.green, 5f);
+                        Debug.DrawRay(doorPosition, Vector3.up, Color.yellow, 5f);
+                    }
+                }
+                else
+                {
+                    Debug.LogWarning($"No door prefab found for size: {doorway.doorSize}");
+                }
+            }
+        }
+        
+        // Process unconnected doorways (spawn locked doors)
+        foreach (Doorway doorway in allDoorways)
+        {
+            // Skip already processed doorways
+            if (processedDoorways.Contains(doorway))
+                continue;
+                    
+            // This is an unconnected doorway - spawn a locked door
+            GameObject lockedDoorPrefab = GetLockedDoorPrefabForSize(doorway.doorSize);
+            
+            if (lockedDoorPrefab != null)
+            {            
+                // Create container at doorway position
+                GameObject doorContainer = new GameObject("LockedDoorContainer");
+                doorContainer.transform.SetParent(doorway.transform.parent);
+                doorContainer.transform.position = doorway.transform.position;
+                doorContainer.transform.rotation = doorway.transform.rotation;
+                
+                // Create door as child with zero local offset
+                GameObject door = Instantiate(lockedDoorPrefab);
+                door.transform.SetParent(doorContainer.transform);
+                door.transform.localPosition = Vector3.zero;
+                door.transform.localRotation = Quaternion.identity;
+                
+                Door doorComponent = door.GetComponent<Door>();
+                if (doorComponent != null)
+                {
+                    doorComponent.doorSize = doorway.doorSize;
+                    doorComponent.isLocked = true;
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"No locked door prefab found for size: {doorway.doorSize}");
+            }
+            
+            // Mark as processed
+            processedDoorways.Add(doorway);
+        }
+    }
+
+    private Vector3 GetDoorCenterOffset(GameObject doorPrefab)
+    {
+        // Try to find a collider to determine the center
+        Collider doorCollider = doorPrefab.GetComponentInChildren<Collider>();
+        if (doorCollider != null)
+        {
+            // Get the center point of the collider in local space
+            return doorCollider.bounds.center - doorPrefab.transform.position;
+        }
+        
+        // If no collider, check for a renderer to find visual center
+        Renderer doorRenderer = doorPrefab.GetComponentInChildren<Renderer>();
+        if (doorRenderer != null)
+        {
+            return doorRenderer.bounds.center - doorPrefab.transform.position;
+        }
+        
+        // If neither is found, default to no offset
+        return Vector3.zero;
+    }
+
+    GameObject GetDoorPrefabForSize(DoorSize size)
+    {
+        foreach (DoorPrefab doorPrefab in doorPrefabs)
+        {
+            if (doorPrefab.doorSize == size)
+            {
+                return doorPrefab.doorPrefab;
+            }
+        }
+        
+        // If no exact match, return the default door as fallback
+        foreach (DoorPrefab doorPrefab in doorPrefabs)
+        {
+            if (doorPrefab.doorSize == DoorSize.Default)
+            {
+                return doorPrefab.doorPrefab;
+            }
+        }
+        
+        return doorPrefabs.Count > 0 ? doorPrefabs[0].doorPrefab : null;
+    }
+
+    // Helper method to get the appropriate locked door prefab for a given door size
+    GameObject GetLockedDoorPrefabForSize(DoorSize size)
+    {
+        foreach (DoorPrefab doorPrefab in doorPrefabs)
+        {
+            if (doorPrefab.doorSize == size)
+            {
+                return doorPrefab.lockedDoorPrefab != null ? 
+                    doorPrefab.lockedDoorPrefab : 
+                    doorPrefab.doorPrefab; // Fall back to regular door prefab if no locked version exists
+            }
+        }
+        
+        // If no exact match, return the default locked door as fallback
+        foreach (DoorPrefab doorPrefab in doorPrefabs)
+        {
+            if (doorPrefab.doorSize == DoorSize.Default)
+            {
+                return doorPrefab.lockedDoorPrefab != null ? 
+                    doorPrefab.lockedDoorPrefab : 
+                    doorPrefab.doorPrefab;
+            }
+        }
+        
+        return doorPrefabs.Count > 0 ? 
+            (doorPrefabs[0].lockedDoorPrefab != null ? doorPrefabs[0].lockedDoorPrefab : doorPrefabs[0].doorPrefab) : 
+            null;
     }
 
     bool ValidRoomLocation(GameObject room) 

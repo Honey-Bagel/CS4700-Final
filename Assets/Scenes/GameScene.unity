@@ -419,6 +419,7 @@ GameObject:
   - component: {fileID: 2128695153}
   - component: {fileID: 2128695154}
   - component: {fileID: 2128695155}
+  - component: {fileID: 2128695156}
   m_Layer: 0
   m_Name: LevelGenerator
   m_TagString: Untagged
@@ -472,6 +473,14 @@ MonoBehaviour:
   showDebug: 1
   showLogs: 1
   debugLineDuration: 3
+  doorPrefabs:
+  - doorSize: 1
+    doorPrefab: {fileID: 7736677156017304377, guid: 14254e646c5f56c4aaca60973bb8f02a, type: 3}
+    lockedDoorPrefab: {fileID: 7736677156017304377, guid: 25cefc81bdabfdb46a4c4f34a0239bed, type: 3}
+  - doorSize: 2
+    doorPrefab: {fileID: 7736677156017304377, guid: 49f6d808f6de11c4cb3a866c5bc68ef1, type: 3}
+    lockedDoorPrefab: {fileID: 7736677156017304377, guid: bd430b3b6764dcc449b9886d7af50d62, type: 3}
+  itemSpawner: {fileID: 2128695156}
   collisions: []
 --- !u!114 &2128695155
 MonoBehaviour:
@@ -487,3 +496,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   buildAsynchronously: 0
   roomParent: {fileID: 65661614}
+--- !u!114 &2128695156
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2128695151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 77d32511779b4c24fad21a3741c0e7a7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spawnItems: 1
+  spawnChance: 0.5
+  items:
+  - itemPrefab: {fileID: 5325353682980606589, guid: 4f86cf462e53ee544a1854e7f6ad7319, type: 3}
+    spawnWeight: 1
+    basePrice: 0

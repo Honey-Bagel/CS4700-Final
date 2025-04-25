@@ -8,6 +8,7 @@ public class GeneratorEditor : Editor
     private bool showRoomSettings = true;
     private bool showGenerationSettings = true;
     private bool showDebugSettings = true;
+    private bool showDoorSettings = true;
 
     // Properties
     // Generation Props
@@ -22,6 +23,9 @@ public class GeneratorEditor : Editor
     private SerializedProperty showDebugProp;
     private SerializedProperty showLogsProp;
     private SerializedProperty debugLineDurationProp;
+    // Item Props
+    private SerializedProperty itemSpawnerProp;
+    private SerializedProperty doorPrefabsProp;
 
     private void OnEnable()
     {
@@ -36,6 +40,8 @@ public class GeneratorEditor : Editor
         showLogsProp = serializedObject.FindProperty("showLogs");
         debugLineDurationProp = serializedObject.FindProperty("debugLineDuration");
         roomListProp = serializedObject.FindProperty("roomList");
+        itemSpawnerProp = serializedObject.FindProperty("itemSpawner");
+        doorPrefabsProp = serializedObject.FindProperty("doorPrefabs");
     }
 
     public override void OnInspectorGUI()
@@ -54,6 +60,15 @@ public class GeneratorEditor : Editor
         DrawDebugSettings();
 
         EditorGUILayout.Space();
+
+        EditorGUILayout.PropertyField(itemSpawnerProp);
+
+        EditorGUILayout.Space();
+
+        DrawDoorSettings();
+
+        EditorGUILayout.Space();
+
         DrawGenerateButtons();
 
         serializedObject.ApplyModifiedProperties();
@@ -127,6 +142,26 @@ public class GeneratorEditor : Editor
         }
 
         EditorGUILayout.EndFoldoutHeaderGroup();
+    }
+
+    private void DrawDoorSettings()
+    {
+        showDoorSettings = EditorGUILayout.BeginFoldoutHeaderGroup(showDoorSettings, "Door Settings");
+
+        EditorGUILayout.EndFoldoutHeaderGroup();
+
+        if(showDoorSettings)
+        {
+            EditorGUI.indentLevel++;
+
+            EditorGUILayout.PropertyField(doorPrefabsProp);
+
+            EditorGUILayout.Space();
+
+            EditorGUI.indentLevel--;
+        }
+        EditorGUILayout.EndFoldoutHeaderGroup();
+
     }
 
     private void DrawGenerateButtons()

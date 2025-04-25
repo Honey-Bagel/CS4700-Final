@@ -57,7 +57,9 @@ public class InventoryHandler : MonoBehaviour {
         }
         
         invSlot.SOReference = item.inventoryItemSO;
-        invSlot.health = item.health;
+        
+        invSlot.state = new PickableItemState();
+        invSlot.state.CaptureFrom(item);
 
         print(item.inventoryItemSO);
         print(inventory[selectedSlot]);
@@ -93,6 +95,8 @@ public class InventoryHandler : MonoBehaviour {
         //else, instantiate thing, set it in front of the player
         //TODO: find out if this is even a good way to handle items
 
+        unequippingSlot.state.ApplyTo(reference);
+
         unequippingSlot.SOReference = null;
         unequippingSlot.health = 0;
     }
@@ -102,10 +106,27 @@ public class InventoryHandler : MonoBehaviour {
         Drop(selectedSlot);
     }
 
+    public void DestroyHeldItem()
+    {
+        InventorySlot currentSlot = inventory[selectedSlot];
+
+        if(currentSlot.SOReference == null) return; //if nothing then just don't do anything
+
+        if(heldGameObject != null)
+        {
+            Destroy(heldGameObject.gameObject);
+            heldGameObject = null;
+        }
+
+        currentSlot.SOReference = null;
+        currentSlot.state = new PickableItemState();
+    }
+
     private void ChangeModel(){
 
         //delete the existing held model if any
         if (heldGameObject != null){
+            inventory[selectedSlot].state.CaptureFrom(heldGameObject);
             Destroy(heldGameObject.gameObject);
             heldGameObject = null;
         }
@@ -117,6 +138,8 @@ public class InventoryHandler : MonoBehaviour {
         //get gameObj ref first
         GameObject heldObj = Instantiate(invSlot.SOReference.objectPrefab, renderCamera.transform);
         heldGameObject = heldObj.GetComponent<PickableItem>();
+
+        invSlot.state.ApplyTo(heldGameObject);
 
         //make it show in held render
         heldObj.layer = LayerMask.NameToLayer("HeldRender");
@@ -170,5 +193,24 @@ public class InventoryHandler : MonoBehaviour {
     public void UsePrimary(){
         if (heldGameObject == null) return;
         heldGameObject.PrimaryUse();
+    }
+}
+
+[System.Serializable]
+public class PickableItemState {
+    public int health;
+    public bool isUsable;
+    public int price;
+
+    public void CaptureFrom(PickableItem item) {
+        health = item.health;
+        isUsable = item.isUsable;
+        price = item.GetPrice();
+    }
+
+    public void ApplyTo(PickableItem item) {
+        item.health = health;
+        item.isUsable = isUsable;
+        item.SetPrice(price);
     }
 }
