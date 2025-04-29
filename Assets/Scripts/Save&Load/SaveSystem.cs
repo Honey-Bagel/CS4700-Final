@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -9,10 +10,11 @@ using UnityEngine;
 public static class SaveSystem
 {
     private static string SavePath => $"{Application.persistentDataPath}/saves/";
-    private static string SaveFileName => "gamesave.dat";
+    private static string GetSaveFileName(int slotId) => $"gamesave_slot{slotId}.dat";
+    private static readonly int MaxSaveSlots = 3;
     
     // Save game data to disk
-    public static void SaveGame()
+    public static void SaveGame(int slotId)
     {
         try
         {
@@ -45,11 +47,12 @@ public static class SaveSystem
                 CurrentLevel = GameManager.Instance.CurrentLevel,
                 DeathCount = GameManager.Instance.DeathCount,
                 ScrapCount = GameManager.Instance.ScrapCount,
-                GameObjectData = gameObjectData
+                GameObjectData = gameObjectData,
+                LastSaveDate = DateTime.Now
             };
             
             // Write to disk
-            string fullPath = Path.Combine(SavePath, SaveFileName);
+            string fullPath = Path.Combine(SavePath, GetSaveFileName(slotId));
             BinaryFormatter formatter = new BinaryFormatter();
             
             using (FileStream stream = new FileStream(fullPath, FileMode.Create))
@@ -58,6 +61,8 @@ public static class SaveSystem
             }
             
             Debug.Log($"Game saved successfully at: {fullPath} with {gameObjectData.Count} objects");
+
+            UpdateSaveSlotMetadata(slotId, saveData);
         }
         catch (Exception e)
         {
@@ -66,9 +71,9 @@ public static class SaveSystem
     }
     
     // Load game data from disk
-    public static bool LoadGame()
+    public static bool LoadGame(int slotId)
     {
-        string fullPath = Path.Combine(SavePath, SaveFileName);
+        string fullPath = Path.Combine(SavePath, GetSaveFileName(slotId));
         
         if (!File.Exists(fullPath))
         {
@@ -114,6 +119,9 @@ public static class SaveSystem
                     }
                     
                     Debug.Log("Game loaded successfully from: " + fullPath);
+
+                    GameManager.Instance.SetCurrentSaveSlot(slotId);
+
                     return true;
                 }
             }
@@ -135,19 +143,112 @@ public static class SaveSystem
     }
     
     // Utility methods
-    public static bool DoesSaveExist()
+    public static bool DoesSaveExist(int slotId)
     {
-        string fullPath = Path.Combine(SavePath, SaveFileName);
+        string fullPath = Path.Combine(SavePath, GetSaveFileName(slotId));
         return File.Exists(fullPath);
     }
     
-    public static void DeleteSave()
+    public static void DeleteSave(int slotId)
     {
-        string fullPath = Path.Combine(SavePath, SaveFileName);
+        string fullPath = Path.Combine(SavePath, GetSaveFileName(slotId));
         if (File.Exists(fullPath))
         {
             File.Delete(fullPath);
             Debug.Log("Save file deleted");
+
+            DeleteSaveSlotMetadata(slotId);
         }
     }
+
+    public static List<SaveSlotInfo> GetAllSaveSlots()
+    {
+        List<SaveSlotInfo> slots = new List<SaveSlotInfo>();
+
+        for(int i = 0; i < MaxSaveSlots; i++) {
+            SaveSlotInfo info = GetSaveSlotInfo(i);
+            slots.Add(info);
+        }
+
+        return slots;
+    }
+
+    public static SaveSlotInfo GetSaveSlotInfo(int slotId)
+    {
+        string metadataPath = Path.Combine(SavePath, $"slot_{slotId}_metadata.json");
+
+        if(File.Exists(metadataPath))
+        {
+            try {
+                string json = File.ReadAllText(metadataPath);
+                SaveSlotInfo info = JsonUtility.FromJson<SaveSlotInfo>(json);
+                info.SlotId = slotId;
+                info.Exists = true;
+                return info;
+            } catch (Exception e) {
+                Debug.LogError($"Error reading save slot metadata: {e.Message}");
+            }
+        }
+
+        return new SaveSlotInfo {
+            SlotId = slotId,
+            Exists = false,
+            DisplayName = $"Empty Slot {slotId + 1}"
+        };
+    }
+
+    private static void UpdateSaveSlotMetadata(int slotId, SaveData saveData)
+    {
+        try {
+            if(!Directory.Exists(SavePath)) {
+                Directory.CreateDirectory(SavePath);
+            }
+
+            SaveSlotInfo info = new SaveSlotInfo {
+                SlotId = slotId,
+                Exists = true,
+                DisplayName = $"Save {slotId + 1}",
+                LastSaveDate = saveData.LastSaveDate,
+                TotalPlaytimeMinutes = saveData.TotalPlaytimeMinutes,
+                CurrentLevel = saveData.CurrentLevel,
+            };
+
+            string json = JsonUtility.ToJson(info);
+            string metadataPath = Path.Combine(SavePath, $"slot_{slotId}_metadata.json");
+            File.WriteAllText(metadataPath, json);
+        } catch (Exception e) {
+            Debug.LogError($"Error writing save slot metadata: {e.Message}");
+        }
+    }
+
+    private static void DeleteSaveSlotMetadata(int slotId)
+    {
+        string metadataPath = Path.Combine(SavePath, $"slot_{slotId}_metadata.json");
+        if(File.Exists(metadataPath)) {
+            File.Delete(metadataPath);
+        }
+    }
+
+    public static void CreateNewGame(int slotId) {
+        GameManager.Instance.ResetGameState();
+
+        GameManager.Instance.SetCurrentSaveSlot(slotId);
+
+        SaveGame(slotId);
+    }
+}
+
+[Serializable]
+public class SaveSlotInfo
+{
+    public int SlotId;
+    public bool Exists;
+    public string DisplayName;
+    public DateTime LastSaveDate;
+    public float TotalPlaytimeMinutes;
+    public int CurrentLevel;
+
+    public string FormattedPlaytime => $"{(int)TotalPlaytimeMinutes/60}h {(int)TotalPlaytimeMinutes%60}m";
+    public string FormattedLastSaved => LastSaveDate.ToString("MM/dd/yyyy");
+    public string LevelDisplay => $"Level {CurrentLevel}";
 }

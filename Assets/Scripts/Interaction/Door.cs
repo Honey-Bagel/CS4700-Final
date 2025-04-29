@@ -1,6 +1,8 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.UIElements;
 
+[RequireComponent(typeof(BoxCollider))]
 public class Door : MonoBehaviour, I_Interactable
 {
     public bool isLocked = false;
@@ -12,16 +14,18 @@ public class Door : MonoBehaviour, I_Interactable
     public Transform TooltipAnchor;
     public bool usePlayerPositionForDirection = true;  // Whether to use player position for door direction
 
-    private bool isOpen = false;
+    public bool isOpen = false;
     private Animator animator;
     private Quaternion defaultLocalRotation;  // Use local rotation instead of world
     private Vector3 rotationAxis = Vector3.up;  // Default rotation axis
     private bool isMoving = false;
     private bool openForward = true;  // Direction to open, will be set based on player position
+    private BoxCollider boxCollider;
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        boxCollider = GetComponent<BoxCollider>();
 
         if(doorPivot == null)
         {
@@ -64,6 +68,7 @@ public class Door : MonoBehaviour, I_Interactable
         }
         
         isMoving = true;
+        boxCollider.enabled = false;
         ToggleDoor();
     }
 
@@ -111,6 +116,7 @@ public class Door : MonoBehaviour, I_Interactable
         }
         doorPivot.localRotation = targetRotation;
         isMoving = false;
+        boxCollider.enabled = true;  // Re-enable the collider after the animation
     }
 
     public string GetInteractableName()

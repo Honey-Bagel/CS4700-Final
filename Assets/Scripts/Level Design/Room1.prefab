@@ -331,7 +331,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 2.05
       objectReference: {fileID: 0}
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalPosition.z
@@ -364,6 +364,22 @@ PrefabInstance:
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorSize
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: socketType
+      value: large
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorDimensions.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorDimensions.y
+      value: 4
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
@@ -537,7 +553,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1
+      value: 2.05
       objectReference: {fileID: 0}
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalPosition.z
@@ -570,6 +586,22 @@ PrefabInstance:
     - target: {fileID: 1893443119872995573, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorSize
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: socketType
+      value: large
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorDimensions.x
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 4877563396753918302, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
+      propertyPath: doorDimensions.y
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 6100002883720237321, guid: f02b3b5904c402b4393c9526fae0b9ad, type: 3}
       propertyPath: m_IsTrigger

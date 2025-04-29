@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
     // State properties
     [SerializeField]
     public int CurrentLevel { get; private set; }
+    public int CurrentSaveSlot { get; private set; } = -1;
     [SerializeField]
     public int DeathCount { get; private set; }
     [SerializeField]
@@ -68,7 +69,7 @@ public class GameManager : MonoBehaviour
     // Level control
     public void CompleteLevel()
     {
-        if(ScrapCount < TargetScrapCount)
+        if(ScrapTowardsTarget < TargetScrapCount)
         {
             Debug.LogWarning("Not enough scrap");
             return;
@@ -91,14 +92,20 @@ public class GameManager : MonoBehaviour
     {
         TotalPlaytimeMinutes += Time.unscaledDeltaTime / 60f;
         OnSaveRequested?.Invoke();
-        SaveSystem.SaveGame();
+        
+        if(CurrentSaveSlot >= 0) {
+            SaveSystem.SaveGame(CurrentSaveSlot);
+        } else {
+            Debug.LogError("No save slot selected. Cannot save game.");
+        }
     }
     
     public void LoadGame()
     {
-        if (SaveSystem.LoadGame())
-        {
+        if(CurrentSaveSlot >= 0 && SaveSystem.LoadGame(CurrentSaveSlot)) {
             OnLoadRequested?.Invoke();
+        } else {
+            Debug.LogError("Failed to load game or no save slot selected");
         }
     }
     
@@ -188,5 +195,10 @@ public class GameManager : MonoBehaviour
         }
         ScrapCount -= amount;
         return true;
+    }
+
+    public void SetCurrentSaveSlot(int slotId)
+    {
+        CurrentSaveSlot = slotId;
     }
 }

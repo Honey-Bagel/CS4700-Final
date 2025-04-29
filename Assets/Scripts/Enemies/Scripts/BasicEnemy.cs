@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
+[RequireComponent(typeof(CapsuleCollider))]
 public class BasicEnemy : Enemy
 {
     [Header("Patrol Settings")]
@@ -34,11 +35,15 @@ public class BasicEnemy : Enemy
     private bool hasLineOfSight = false;
     private float lostSightTime = 0f;
     private bool isSearching = false;
+
+    private CapsuleCollider capsuleCollider;
     
     protected override void Awake()
     {
         base.Awake();
         startPosition = transform.position;
+
+        capsuleCollider = GetComponent<CapsuleCollider>();
         
         if (enemyData != null)
         {
@@ -457,6 +462,29 @@ public class BasicEnemy : Enemy
         
         ChangeState(EnemyState.Idle);
     }
-    
-    // Example of a derived enemy implementation with custom behavior
+
+    // Collider events
+    private void OnTriggerEnter(Collider other)
+    {
+        IsDoor isDoor = other.gameObject.GetComponent<IsDoor>();
+        if(isDoor != null) {
+            Door door = isDoor.gameObject.GetComponentInChildren<Door>();
+            if(door != null && !door.isLocked && !door.isOpen)
+            {
+                door.ToggleDoor();
+            }
+        }
+    }
+
+    private void OnTriggerExit(Collider other)
+    {
+        IsDoor isDoor = other.gameObject.GetComponent<IsDoor>();
+        if(isDoor != null) {
+            Door door = isDoor.gameObject.GetComponentInChildren<Door>();
+            if(door != null && door.isOpen)
+            {
+                door.ToggleDoor();
+            }
+        }
+    }
 }

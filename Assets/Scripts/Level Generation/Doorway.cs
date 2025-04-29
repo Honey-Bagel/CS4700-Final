@@ -116,7 +116,7 @@ public class Doorway : MonoBehaviour
         return connectedDoor;
     }
 
-    public void SetConnecetedDoor(Doorway door) {
+    public void SetConnectedDoor(Doorway door) {
         connectedDoor = door;
     } 
 }

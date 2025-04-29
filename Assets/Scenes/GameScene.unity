@@ -455,7 +455,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   numberOfRooms: 20
-  seed: 5
+  seed: 0
   roomParent: {fileID: 65661614}
   roomLayerMask:
     serializedVersion: 2

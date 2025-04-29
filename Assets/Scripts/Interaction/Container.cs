@@ -5,7 +5,6 @@ public class Container : MonoBehaviour
 {
     [Header("Container Settings")]
     [SerializeField] private bool isOpen = false;
-    [SerializeField] private string containerName = "Container";
     [SerializeField] private string uniqueID;
     [SerializeField] private ContainerItemLocation[] items;
     

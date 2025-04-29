@@ -151,7 +151,7 @@ public class Generator : MonoBehaviour
         // Generate the rest of the rooms
         GenerateRooms();
 
-        GenerateDoors();
+        //GenerateDoors();
 
         Debug.Log("Number of rooms: " + rooms.Count);
         Debug.Log("Remaining open doors: " + openDoors.Count);
@@ -213,8 +213,8 @@ public class Generator : MonoBehaviour
                     List<Doorway> copyOpenDoors = new List<Doorway>(openDoors);
 
                     // Setup door connections
-                    selectedDoor.connected = true;
-                    candidateDoor.connected = true;
+                    // selectedDoor.connected = true;
+                    // candidateDoor.connected = true;
                     openDoors.Remove(selectedDoor);
 
                     // Keep rooms list up to date
@@ -532,7 +532,7 @@ public class Generator : MonoBehaviour
             Vector3 direction = door.transform.forward;
 
             RaycastHit hit;
-            if(!Physics.Raycast(origin, direction, out hit, 0.1f)) {
+            if(!Physics.Raycast(origin, direction, out hit, 0.2f)) {
                 continue;
             }
             if(hit.collider.gameObject.CompareTag("door")) {
@@ -545,10 +545,13 @@ public class Generator : MonoBehaviour
         foreach(List<Doorway> pair in validPairs) {
             Doorway d1 = pair.ElementAt(0);
             Doorway d2 = pair.ElementAt(1);
+            if(d1== d2){
+                d2 = rooms[0].GetComponentInChildren<Doorway>();
+            }
             d1.connected = true;
             d2.connected = true;
-            d1.SetConnecetedDoor(d2);
-            d2.SetConnecetedDoor(d1);
+            d1.SetConnectedDoor(d2);
+            d2.SetConnectedDoor(d1);
         }
         return true;
     }

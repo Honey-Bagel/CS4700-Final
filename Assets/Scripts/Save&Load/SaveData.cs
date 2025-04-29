@@ -8,5 +8,6 @@ public class SaveData
     public int CurrentLevel = 1;
     public int DeathCount = 0;
     public int ScrapCount = 0;
+    public DateTime LastSaveDate;
     public Dictionary<string, SaveableData> GameObjectData = new Dictionary<string, SaveableData>();
 }
