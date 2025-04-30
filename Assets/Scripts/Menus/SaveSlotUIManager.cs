@@ -19,8 +19,14 @@ public class SaveSlotUIManager : MonoBehaviour
     
     private List<SaveSlotUI> slotUIs = new List<SaveSlotUI>();
     private int selectedSlotForDeletion = -1;
-    
-    private void Start()
+
+    public void RefreshSaveSlots()
+    {
+        LoadSaveSlots();
+        confirmDeletePanel.SetActive(false);
+    }
+
+    private void OnEnable()
     {
         LoadSaveSlots();
         confirmDeletePanel.SetActive(false);
@@ -31,6 +37,7 @@ public class SaveSlotUIManager : MonoBehaviour
     
     private void LoadSaveSlots()
     {
+        Debug.Log("Loading save slots...");
         // Clear existing slots first
         foreach (Transform child in slotsContainer)
         {

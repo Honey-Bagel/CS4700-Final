@@ -28,6 +28,7 @@ public class BasicEnemy : Enemy
     [Header("Detection Settings")]
     public bool requireLineOfSight = true;
     public LayerMask obstacleLayerMask;
+    public LayerMask playerLayerMask;
     public float sightCheckFrequency = 0.2f;
     [Tooltip("How long the enemy will remember and chase a hidden player (in seconds)")]
     public float memoryDuration = 5f;
@@ -249,20 +250,8 @@ public class BasicEnemy : Enemy
         }
         
         // Check if player is in front of the enemy with a raycast
-        RaycastHit hit;
-        Vector3 direction = (target.position - transform.position).normalized;
-        if (Physics.Raycast(transform.position, direction, out hit, attackRange))
-        {
-            if (hit.transform == target)
-            {
-                // Deal damage to player
-                //PlayerHealth playerHealth = target.GetComponent<PlayerHealth>();
-                // if (playerHealth != null)
-                // {
-                //     playerHealth.TakeDamage(attackDamage);
-                // }
-            }
-        }
+        HealthComponent targetHealth = target.GetComponent<HealthComponent>();
+        targetHealth?.TakeDamage(attackDamage);
         
         lastAttackTime = Time.time;
     }
@@ -294,7 +283,7 @@ public class BasicEnemy : Enemy
                     // Player in range but no line of sight - debug visualization
                     RaycastHit hit;
                     Vector3 direction = (player.transform.position - transform.position).normalized;
-                    if (Physics.Raycast(transform.position, direction, out hit, detectionRange, obstacleLayerMask))
+                    if (Physics.Raycast(transform.position, direction, out hit, detectionRange, obstacleLayerMask, QueryTriggerInteraction.Ignore))
                     {
                         Debug.DrawLine(transform.position, hit.point, Color.red, sightCheckFrequency);
                     }
@@ -324,7 +313,7 @@ public class BasicEnemy : Enemy
         Vector3 startPoint = transform.position + Vector3.up * 1.5f;
 
         RaycastHit hit;
-        if (Physics.Raycast(startPoint, direction.normalized, out hit, distance, obstacleLayerMask))
+        if (Physics.Raycast(startPoint, direction.normalized, out hit, distance, obstacleLayerMask, QueryTriggerInteraction.Ignore))
         {
             // If we hit something that isn't the player, no line of sight
             if (hit.transform != targetTransform)

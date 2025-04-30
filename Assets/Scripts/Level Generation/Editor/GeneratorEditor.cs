@@ -15,6 +15,7 @@ public class GeneratorEditor : Editor
     private SerializedProperty seedProp;
     private SerializedProperty roomCountProp;
     private SerializedProperty roomParentProp;
+    private SerializedProperty startRoomProp;
     // Room Props
     private SerializedProperty roomLayerMaskProp;
     private SerializedProperty startRoomPrefabProp;
@@ -42,6 +43,7 @@ public class GeneratorEditor : Editor
         roomListProp = serializedObject.FindProperty("roomList");
         itemSpawnerProp = serializedObject.FindProperty("itemSpawner");
         doorPrefabsProp = serializedObject.FindProperty("doorPrefabs");
+        startRoomProp = serializedObject.FindProperty("startRoom");
     }
 
     public override void OnInspectorGUI()
@@ -85,6 +87,7 @@ public class GeneratorEditor : Editor
             EditorGUILayout.PropertyField(seedProp);
             EditorGUILayout.PropertyField(roomCountProp);
             EditorGUILayout.PropertyField(roomParentProp);
+            EditorGUILayout.PropertyField(startRoomProp);
 
             EditorGUILayout.Space();
 

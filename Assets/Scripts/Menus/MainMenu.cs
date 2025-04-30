@@ -5,6 +5,14 @@ public class MainMenu : MonoBehaviour
     [Header("Panels")]
     [SerializeField] private GameObject mainMenuPanel;
     [SerializeField] private GameObject saveSlotPanel;
+    [SerializeField] private SaveSlotUIManager saveSlotUIManager;
+
+    private void Start()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
     public void OnPlayButtonClicked()
     {
         if(saveSlotPanel == null) {
@@ -12,6 +20,8 @@ public class MainMenu : MonoBehaviour
         }
         saveSlotPanel.SetActive(true);
         mainMenuPanel.SetActive(false);
+
+        saveSlotUIManager?.RefreshSaveSlots();
     }
 
     public void OnBackButtonClicked()

@@ -3,9 +3,12 @@ using UnityEngine;
 using System.Linq;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(CharacterController))]
-public class PlayerController : MonoBehaviour, ISaveable
+[RequireComponent(typeof(StaminaComponent))]
+[RequireComponent(typeof(HealthComponent))]
+public class PlayerController : MonoBehaviour, ISaveable, IDamageable
 {
     [SerializeField]
     private string uniqueID;
@@ -39,11 +42,34 @@ public class PlayerController : MonoBehaviour, ISaveable
 
     private float interactionRange = 4f;
     private I_Interactable currentInteractable;
+
+    // Components
+    public StaminaComponent staminaComponent;
+    public float runningStaminaRate = 10.0f;
+    public float jumpStaminaUse = 25.0f;
     
     void Start()
     {
+        GameManager.OnLevelSetupFinished += OnLevelReady;
+        GameManager.Instance.IsPlayerReady = false;
+    }
+
+    void OnEnable()
+    {
+        HealthComponent.OnDeath += OnPlayerDeath;
+    }
+
+    void OnDisable()
+    {
+        HealthComponent.OnDeath -= OnPlayerDeath;
+    }
+
+    private void OnLevelReady()
+    {
         characterController = GetComponent<CharacterController>();
         playerInventory = GetComponent<InventoryHandler>();
+        staminaComponent = GetComponent<StaminaComponent>();
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         
@@ -56,10 +82,16 @@ public class PlayerController : MonoBehaviour, ISaveable
         {
             interactionTooltip.SetActive(false);
         }
+
+        GameManager.OnLevelSetupFinished -= OnLevelReady;
     }
 
     void Update()
     {
+        if(GameManager.Instance == null || GameManager.Instance.IsPlayerReady == false)
+        {
+            return;
+        }
         if(scrapCountText != null)
         {
             scrapCountText.text = GameManager.Instance.ScrapTowardsTarget.ToString();
@@ -72,13 +104,13 @@ public class PlayerController : MonoBehaviour, ISaveable
 
         Vector3 inputVector = new Vector3(Input.GetAxis("Vertical"), 0f, Input.GetAxis("Horizontal"));
 
-        bool isRunning = Input.GetKey(KeyCode.LeftShift);
+        bool isRunning = Input.GetKey(KeyCode.LeftShift) && inputVector.magnitude > 0f && staminaComponent.UseStamina(runningStaminaRate * Time.deltaTime, true);
         float xVelocity = (isRunning ? runSpeed : walkSpeed) * inputVector.x * Time.deltaTime;
         float zVelocity = (isRunning ? runSpeed : walkSpeed) * inputVector.z * Time.deltaTime;
         float yVelocity = movementVelocity.y;
         movementVelocity = (forwardVector * xVelocity) + (rightVector * zVelocity);
 
-        if (Input.GetKey(KeyCode.Space) && characterController.isGrounded)
+        if (Input.GetKey(KeyCode.Space) && characterController.isGrounded && staminaComponent.UseStamina(jumpStaminaUse, false))
         {
             movementVelocity.y = jumpForce;
         }
@@ -239,6 +271,49 @@ public class PlayerController : MonoBehaviour, ISaveable
     public string GetUniqueID()
     {
         return uniqueID;
+    }
+
+    public void ApplyUpgrades(Dictionary<Upgrade, int> upgrades) {
+        Debug.Log("Adding upgrades to Player");
+        foreach(var upgrade in upgrades) {
+            switch(upgrade.Key.upgradeType) {
+                case UpgradeType.Health:
+                    HealthComponent healthComponent = GetComponent<HealthComponent>();
+                    healthComponent.MaxHealth += upgrade.Key.modifier * upgrade.Value;
+                    break;
+                case UpgradeType.Speed:
+                    runSpeed += upgrade.Key.modifier * upgrade.Value;
+                    walkSpeed += upgrade.Key.modifier * upgrade.Value;
+                    break;
+                case UpgradeType.Damage:
+                    // Apply damage upgrade logic here
+                    break;
+                case UpgradeType.StaminaIncrease:
+                    staminaComponent.MaxStamina += upgrade.Key.modifier * upgrade.Value;
+                    break;
+                case UpgradeType.StaminaRecharge:
+                    staminaComponent.staminaRegenRate += upgrade.Key.modifier * upgrade.Value;
+                    break;
+                default:
+                    Debug.LogWarning("Unknown upgrade type: " + upgrade.Key.upgradeType);
+                    break;
+            }
+        }
+    }
+
+    void OnPlayerDeath()
+    {
+        Debug.Log("Player has died.");
+        GameManager.Instance.LevelFailed();
+    }
+
+    public void TakeDamage(int damageAmount)
+    {
+        HealthComponent healthComponent = GetComponent<HealthComponent>();
+        if (healthComponent != null)
+        {
+            healthComponent.TakeDamage(damageAmount);
+        }
     }
 }
 

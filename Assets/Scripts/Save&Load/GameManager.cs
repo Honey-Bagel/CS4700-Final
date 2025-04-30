@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,6 +14,8 @@ public class GameManager : MonoBehaviour
     public static event Action OnLoadRequested;
     public static event Action OnLevelCompleted;
     public static event Action OnPlayerReady;
+    public static event Action OnLevelSetupFinished;
+    public static event Action<int> OnScrapCountChanged;
     
     // State properties
     [SerializeField]
@@ -22,9 +26,16 @@ public class GameManager : MonoBehaviour
     [SerializeField]
     public float Difficulty { get; private set; }
     public float TotalPlaytimeMinutes { get; private set; }
-    public int ScrapCount { get; private set;}
+    private int _scrapCount;
+    public int ScrapCount { get => _scrapCount; private set {
+            if(_scrapCount != value) {
+                _scrapCount = value;
+                OnScrapCountChanged?.Invoke(_scrapCount);
+            }
+        }
+    }
     public int ScrapTowardsTarget { get; private set; }
-    public bool IsPlayerReady { get; private set; }
+    public bool IsPlayerReady;
 
     [SerializeField]
     public int TargetScrapCount { get; private set; }
@@ -38,6 +49,9 @@ public class GameManager : MonoBehaviour
     private string _nextSceneName;
     private bool _requiresLevelGeneration;
     private bool _requiresSaveDataLoading;
+
+    [SerializeField]
+    public Dictionary<Upgrade, int> upgrades = new Dictionary<Upgrade, int>();
     
     private void Awake()
     {
@@ -69,15 +83,22 @@ public class GameManager : MonoBehaviour
     // Level control
     public void CompleteLevel()
     {
-        if(ScrapTowardsTarget < TargetScrapCount)
-        {
-            Debug.LogWarning("Not enough scrap");
-            return;
-        }
+        // if(ScrapTowardsTarget < TargetScrapCount)
+        // {
+        //     Debug.LogWarning("Not enough scrap");
+        //     return;
+        // }
         CurrentLevel++;
         OnLevelCompleted?.Invoke();
         SaveGame();
         LoadSceneWithTransition(restScene, false, true);
+    }
+
+    public void LevelFailed()
+    {
+        // Delete the save and go back to main menu
+        SaveSystem.DeleteSave(CurrentSaveSlot);
+        LoadSceneWithTransition("MainMenu", false, false);
     }
     
     public void StartNextLevel()
@@ -126,6 +147,8 @@ public class GameManager : MonoBehaviour
         float levelFactor = 1.0f + (CurrentLevel * 0.05f);
 
         TargetScrapCount = Mathf.RoundToInt(300 * modifier * difficultyFactor * levelFactor);
+
+        OnLevelSetupFinished?.Invoke();
     }
     
     private IEnumerator WaitToLoadSaveData()
@@ -200,5 +223,41 @@ public class GameManager : MonoBehaviour
     public void SetCurrentSaveSlot(int slotId)
     {
         CurrentSaveSlot = slotId;
+    }
+
+    public void AddUpgrade(Upgrade type) {
+        if(upgrades == null) {
+            upgrades = new Dictionary<Upgrade, int>();
+        }
+        if (upgrades.ContainsKey(type)) {
+            upgrades[type]++;
+        } else {
+            upgrades.Add(type, 1);
+        }
+    }
+
+    public void LoadUpgrades(List<SerializableUpgrade> serializableUpgrades)
+    {
+        upgrades.Clear();
+
+        foreach(var serializableUpgrade in serializableUpgrades)
+        {
+            Upgrade upgrade = Resources.FindObjectsOfTypeAll<Upgrade>().FirstOrDefault(u => u.name == serializableUpgrade.upgradeName);
+            if(upgrade != null) {
+                upgrades[upgrade] = serializableUpgrade.count;
+            } else {
+                Debug.LogWarning($"Could not find upgrade with name: {serializableUpgrade.upgradeName}");
+            }
+        }
+        Debug.Log($"Loaded {upgrades.Count} upgrades");
+
+        ApplyUpgrades();
+    }
+
+    public void ApplyUpgrades() {
+        PlayerController player = FindObjectOfType<PlayerController>();
+        if(player != null) {
+            FindObjectOfType<PlayerController>().ApplyUpgrades(upgrades);
+        }
     }
 }

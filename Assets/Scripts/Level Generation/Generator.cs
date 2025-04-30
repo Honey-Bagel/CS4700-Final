@@ -19,6 +19,7 @@ public class Generator : MonoBehaviour
     public Transform roomParent;
     [Tooltip("Layer Mask that contains the masks that are applied to all room geometry. (for positioning)")]
     public LayerMask roomLayerMask;
+    public GameObject startRoom;
 
     // Room Prefabs
     public List<Room> roomList = new List<Room>();
@@ -131,8 +132,13 @@ public class Generator : MonoBehaviour
             Random.InitState(seed);
         }
 
+        if(startRoom == null) {
+            Debug.LogError("No start room prefab assigned. Please assign one to continue.");
+            return;
+        }
+
         // Spawn first room
-        GameObject startRoom = Instantiate(startRoomPrefab, Vector3.zero, Quaternion.identity, roomParent);
+        // GameObject startRoom = Instantiate(startRoomPrefab, Vector3.zero, Quaternion.identity, roomParent);
         rooms.Add(startRoom);
         roomHistory.Push(startRoom);
 

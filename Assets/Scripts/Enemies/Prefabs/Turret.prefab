@@ -189,7 +189,7 @@ MonoBehaviour:
   firePoint: {fileID: 6411837161894078034}
   fireRate: 5
   projectileSpeed: 100
-  projectileDamage: 10
+  projectileDamage: 5
   rotationThreshold: 5
   bloomAngle: 5
   randomSwivel: 1

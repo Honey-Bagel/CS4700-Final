@@ -81,12 +81,15 @@ MonoBehaviour:
   idleTime: 3
   pathTimeout: 3
   stuckDistance: 0.5
-  attackDamage: 10
-  attackCooldown: 1.5
+  attackDamage: 20
+  attackCooldown: 0.5
   requireLineOfSight: 1
   obstacleLayerMask:
     serializedVersion: 2
-    m_Bits: 384
+    m_Bits: 448
+  playerLayerMask:
+    serializedVersion: 2
+    m_Bits: 1
   sightCheckFrequency: 0.2
   memoryDuration: 5
 --- !u!54 &-451130245433188246

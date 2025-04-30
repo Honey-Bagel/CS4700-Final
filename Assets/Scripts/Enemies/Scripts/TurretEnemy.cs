@@ -227,7 +227,7 @@ public class TurretEnemy : Enemy
                 }
                 
                 RaycastHit hit;
-                if (Physics.Raycast(firePoint.position, directionToPlayer, out hit, distanceToCheck, obstacleLayerMask))
+                if (Physics.Raycast(firePoint.position, directionToPlayer, out hit, distanceToCheck, obstacleLayerMask, QueryTriggerInteraction.Ignore))
                 {
                     // Hit something that isn't the player - no line of sight
                     if (hit.transform != player.transform)

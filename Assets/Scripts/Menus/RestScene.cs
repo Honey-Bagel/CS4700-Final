@@ -6,6 +6,21 @@ public class RestScene : MonoBehaviour
 {
     [SerializeField] private Button continueButton;
     [SerializeField] private TextMeshProUGUI MoneyText;
+
+    private void OnEnable()
+    {
+        GameManager.OnScrapCountChanged += UpdateScrapDisplay;
+
+        if(GameManager.Instance != null)
+        {
+            UpdateScrapDisplay(GameManager.Instance.ScrapCount);
+        }
+    }
+
+    private void OnDisable()
+    {
+        GameManager.OnScrapCountChanged -= UpdateScrapDisplay;
+    }
     
     private void Start()
     {
@@ -23,11 +38,11 @@ public class RestScene : MonoBehaviour
         }
     }
 
-    void Awake()
+    private void UpdateScrapDisplay(int scrapCount)
     {
-        if(GameManager.Instance != null)
+        if(MoneyText != null)
         {
-            MoneyText.text = $"$ {GameManager.Instance.ScrapCount}";
+            MoneyText.text = $"$ {scrapCount}";
         }
     }
     

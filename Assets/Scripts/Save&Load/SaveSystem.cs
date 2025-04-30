@@ -39,6 +39,12 @@ public static class SaveSystem
                 gameObjectData[id] = data;
                 Debug.Log($"Saved object with ID: {id}");
             }
+
+            List<SerializableUpgrade> serializableUpgrades = new List<SerializableUpgrade>();
+            foreach(var upgrade in GameManager.Instance.upgrades) {
+                SerializableUpgrade serializableUpgrade = new SerializableUpgrade(upgrade.Key, upgrade.Value);
+                serializableUpgrades.Add(serializableUpgrade);
+            }
             
             // Create save data container
             SaveData saveData = new SaveData
@@ -48,7 +54,8 @@ public static class SaveSystem
                 DeathCount = GameManager.Instance.DeathCount,
                 ScrapCount = GameManager.Instance.ScrapCount,
                 GameObjectData = gameObjectData,
-                LastSaveDate = DateTime.Now
+                LastSaveDate = DateTime.Now,
+                Upgrades = serializableUpgrades
             };
             
             // Write to disk
@@ -98,6 +105,8 @@ public static class SaveSystem
                         saveData.TotalPlaytimeMinutes,
                         saveData.ScrapCount
                     );
+
+                    GameManager.Instance.LoadUpgrades(saveData.Upgrades);
                     
                     Debug.Log($"Found {saveData.GameObjectData.Count} saved objects");
                     

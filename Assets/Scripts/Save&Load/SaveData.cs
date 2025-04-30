@@ -10,4 +10,5 @@ public class SaveData
     public int ScrapCount = 0;
     public DateTime LastSaveDate;
     public Dictionary<string, SaveableData> GameObjectData = new Dictionary<string, SaveableData>();
+    public List<SerializableUpgrade> Upgrades = new List<SerializableUpgrade>();
 }
