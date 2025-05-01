@@ -1,5 +1,7 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 using UnityEngine.UIElements;
 
 [RequireComponent(typeof(BoxCollider))]
@@ -21,11 +23,13 @@ public class Door : MonoBehaviour, I_Interactable
     private bool isMoving = false;
     private bool openForward = true;  // Direction to open, will be set based on player position
     private BoxCollider boxCollider;
+    private NavMeshObstacle navMeshObstacle;  // Optional NavMesh obstacle for door
 
     void Awake()
     {
         animator = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider>();
+        navMeshObstacle = GetComponent<NavMeshObstacle>();
 
         if(doorPivot == null)
         {
@@ -76,6 +80,14 @@ public class Door : MonoBehaviour, I_Interactable
     {
         isOpen = !isOpen;
 
+        if(boxCollider != null) {
+            Debug.Log("Disabling collider while opening door");
+            boxCollider.enabled = false;  // Disable the collider while opening
+        }
+        if(navMeshObstacle != null) {
+            navMeshObstacle.enabled = false;  // Disable NavMesh obstacle if present
+        }
+
         if(animator != null)
         {
             animator.SetBool("isOpen", isOpen);
@@ -117,6 +129,7 @@ public class Door : MonoBehaviour, I_Interactable
         doorPivot.localRotation = targetRotation;
         isMoving = false;
         boxCollider.enabled = true;  // Re-enable the collider after the animation
+        navMeshObstacle.enabled = true;  // Re-enable NavMesh obstacle if present
     }
 
     public string GetInteractableName()
@@ -137,5 +150,34 @@ public class Door : MonoBehaviour, I_Interactable
     public Transform GetTooltipAnchor()
     {
         return TooltipAnchor != null ? TooltipAnchor : transform;
+    }
+
+    public bool IsEntityInFront(Vector3 entityPosition)
+    {
+        Vector3 doorToEntity = entityPosition - transform.position;
+        doorToEntity.y = 0; // Ignore vertical difference
+        return Vector3.Dot(transform.forward, doorToEntity) > 0;
+    }
+
+    // Get the center point of the doorway
+    public Vector3 GetDoorwayCenter()
+    {
+        // Assuming the door pivot is at the edge of the door
+        // Calculate the center point based on door size
+        float doorWidth = 1.0f; // Adjust based on your door size
+        Vector3 doorRight = transform.right;
+        
+        return doorPivot.position + (doorRight * doorWidth * 0.5f);
+    }
+
+    // Check if we should keep the door open
+    public bool ShouldKeepOpen(Collider entity)
+    {
+        // Check if entity is within doorway bounds
+        Vector3 doorCenter = GetDoorwayCenter();
+        float distanceToDoor = Vector3.Distance(entity.bounds.center, doorCenter);
+        
+        // Consider entity in doorway if within threshold
+        return distanceToDoor < 2.0f;
     }
 }

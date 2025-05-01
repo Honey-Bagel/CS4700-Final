@@ -157,7 +157,7 @@ public class Generator : MonoBehaviour
         // Generate the rest of the rooms
         GenerateRooms();
 
-        //GenerateDoors();
+        GenerateDoors();
 
         Debug.Log("Number of rooms: " + rooms.Count);
         Debug.Log("Remaining open doors: " + openDoors.Count);

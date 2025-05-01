@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -38,6 +39,19 @@ public class BasicEnemy : Enemy
     private bool isSearching = false;
 
     private CapsuleCollider capsuleCollider;
+
+    // Doors
+    private Dictionary<Door, DoorTraversalState> doorTraversalStates = new Dictionary<Door, DoorTraversalState>();
+    private float doorCloseDelay = 1.0f;
+
+    private enum DoorTraversalState
+    {
+        Opening,
+        Traversing,
+        Completed,
+        TimedOut
+    }
+
     
     protected override void Awake()
     {
@@ -455,25 +469,106 @@ public class BasicEnemy : Enemy
     // Collider events
     private void OnTriggerEnter(Collider other)
     {
-        IsDoor isDoor = other.gameObject.GetComponent<IsDoor>();
-        if(isDoor != null) {
-            Door door = isDoor.gameObject.GetComponentInChildren<Door>();
-            if(door != null && !door.isLocked && !door.isOpen)
+        // Check if this is a door
+        Door door = other.GetComponentInParent<Door>();
+        if (door != null && !door.isLocked)
+        {
+            // If door is closed, open it and begin tracking
+            if (!door.isOpen)
             {
-                door.ToggleDoor();
+                door.Interact(gameObject);
+                doorTraversalStates[door] = DoorTraversalState.Opening;
+                StartCoroutine(TrackDoorTraversal(door));
+            }
+            // If door is already open, we're probably entering the trigger from the other side
+            else if (!doorTraversalStates.ContainsKey(door))
+            {
+                doorTraversalStates[door] = DoorTraversalState.Traversing;
+                StartCoroutine(TrackDoorTraversal(door));
             }
         }
     }
 
-    private void OnTriggerExit(Collider other)
+   private IEnumerator TrackDoorTraversal(Door door)
     {
-        IsDoor isDoor = other.gameObject.GetComponent<IsDoor>();
-        if(isDoor != null) {
-            Door door = isDoor.gameObject.GetComponentInChildren<Door>();
-            if(door != null && door.isOpen)
+        if (door == null) yield break;
+        
+        // Wait for the door to finish opening
+        yield return new WaitForSeconds(0.5f);
+        
+        // Change state to traversing
+        doorTraversalStates[door] = DoorTraversalState.Traversing;
+        
+        // Store the door's pivot position to calculate direction of traversal
+        Vector3 doorPosition = door.transform.position;
+        Vector3 initialPosition = transform.position;
+        Vector3 directionToDoor = (doorPosition - initialPosition).normalized;
+        
+        // Calculate which side of the door we started on
+        bool startedInFront = Vector3.Dot(door.transform.forward, directionToDoor) > 0;
+        
+        // Define timeout to prevent doors staying open forever
+        float traversalTimeout = 5.0f;
+        float elapsedTime = 0f;
+        bool hasTraversed = false;
+        
+        // Monitor enemy position until traversal is complete or timeout
+        while (elapsedTime < traversalTimeout && doorTraversalStates.ContainsKey(door) && doorTraversalStates[door] == DoorTraversalState.Traversing)
+        {
+            // Calculate if we've crossed to the other side
+            Vector3 currentDirection = (doorPosition - transform.position).normalized;
+            bool currentlyInFront = Vector3.Dot(door.transform.forward, currentDirection) > 0;
+            
+            // If we've moved from one side to the other, traversal is complete
+            if (startedInFront != currentlyInFront && 
+                Vector3.Distance(transform.position, doorPosition) > 1.5f)
+            {
+                hasTraversed = true;
+                doorTraversalStates[door] = DoorTraversalState.Completed;
+            }
+            
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+        
+        // If we timed out without traversing, mark as timed out
+        if (!hasTraversed)
+        {
+            doorTraversalStates[door] = DoorTraversalState.TimedOut;
+        }
+        
+        // Wait for a small delay to ensure we're clear of the door
+        yield return new WaitForSeconds(doorCloseDelay);
+        
+        // Close the door if it's still open
+        if (door != null && door.isOpen)
+        {
+            // Double-check we're not in the door's way
+            if (!IsDirectlyBlockingDoor(door))
             {
                 door.ToggleDoor();
             }
         }
+        
+        // Remove this door from tracking
+        if (doorTraversalStates.ContainsKey(door))
+        {
+            doorTraversalStates.Remove(door);
+        }
+    }
+
+    // Simple method to check if we're directly in the doorway
+    private bool IsDirectlyBlockingDoor(Door door)
+    {
+        if (door == null) return false;
+        
+        // Get the door's center position and forward direction
+        Vector3 doorCenter = door.doorPivot.position;
+        
+        // Check distance to door
+        float distanceToDoor = Vector3.Distance(transform.position, doorCenter);
+        
+        // Consider enemy blocking if within close proximity (adjust based on your game)
+        return distanceToDoor < 1.5f;
     }
 }
