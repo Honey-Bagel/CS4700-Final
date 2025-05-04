@@ -3,15 +3,19 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - startroom
+  - wall
+  - door
+  - room
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - HeldRender
   - Water
   - UI
-  - 
+  - RoomGeometry
   - 
   - 
   - 

@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 798fa0d17c7adcb41855ceaab2dbd561, type: 3}
+  m_Name: TestObject
+  m_EditorClassIdentifier: 
+  objectPrefab: {fileID: 5325353682980606589, guid: 4f86cf462e53ee544a1854e7f6ad7319, type: 3}
+  objectName: Test Object
+  sprite: {fileID: 21300000, guid: 0ec022de2fd856243809f80580ad9a40, type: 3}
+  objectPrice: 40
+  weight: 1
+  holdVector3: {x: 0, y: 0, z: 0}
+  holdQuaternion: {x: 0, y: 0, z: 0, w: 0}
