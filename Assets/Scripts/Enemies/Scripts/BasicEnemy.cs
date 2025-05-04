@@ -191,7 +191,7 @@ public class BasicEnemy : Enemy
     {
         int attempts = 0;
         const int maxAttempts = 5;
-
+        animator.SetBool("IsMoving", true);
         while (attempts < maxAttempts) {
             // Find a random position within patrol radius
             Vector3 randomDirection = Random.insideUnitSphere * patrolRadius;
@@ -218,9 +218,16 @@ public class BasicEnemy : Enemy
             }
         }
         
+        print("Found new");
         patrolTimer = 0f;
     }
-    
+
+    protected override void UpdateIdleState()
+    {
+        base.UpdateIdleState();
+        animator.SetBool("IsMoving", false);
+    }
+
     // Attack Implementation
     protected override void UpdateAttackState()
     {
@@ -252,8 +259,8 @@ public class BasicEnemy : Enemy
             ChangeState(EnemyState.Chase);
             return;
         }
-        
-        print("can perform attack");
+
+
         // If we can attack, perform the attack
         if (Time.time - lastAttackTime >= attackCooldown)
         {
@@ -270,7 +277,7 @@ public class BasicEnemy : Enemy
         {
             animator.SetTrigger("Attack");
         }
-         print("has perform attack");
+
         // Check if player is in front of the enemy with a raycast
         HealthComponent targetHealth = target.GetComponent<HealthComponent>();
         targetHealth?.TakeDamage(attackDamage);
