@@ -57,7 +57,6 @@ public class BasicEnemy : Enemy
     {
         base.Awake();
         startPosition = transform.position;
-
         capsuleCollider = GetComponent<CapsuleCollider>();
         
         if (enemyData != null)
@@ -153,6 +152,7 @@ public class BasicEnemy : Enemy
     protected override void EnterIdleState()
     {
         base.EnterIdleState();
+        animator.SetBool("IsMoving", false);
         isSearching = false;
     }
     
@@ -160,6 +160,7 @@ public class BasicEnemy : Enemy
     protected override void EnterPatrolState()
     {
         base.EnterPatrolState();
+        animator.SetBool("IsMoving", true);
         isSearching = false;
         patrolTimer = 0f;
         FindNewPatrolTarget();
@@ -174,9 +175,14 @@ public class BasicEnemy : Enemy
             // Reached patrol point - wait for a bit
             patrolTimer += Time.deltaTime;
             
+            
             if (patrolTimer >= idleTime)
             {
+                animator.SetBool("IsMoving", true);
                 FindNewPatrolTarget();
+            }
+            else {
+                animator.SetBool("IsMoving", false);
             }
         }
     }
@@ -239,6 +245,7 @@ public class BasicEnemy : Enemy
         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * 5f);
         
+        
         // Check if target is out of attack range
         if (distanceToTarget > attackRange)
         {
@@ -246,6 +253,7 @@ public class BasicEnemy : Enemy
             return;
         }
         
+        print("can perform attack");
         // If we can attack, perform the attack
         if (Time.time - lastAttackTime >= attackCooldown)
         {
@@ -262,7 +270,7 @@ public class BasicEnemy : Enemy
         {
             animator.SetTrigger("Attack");
         }
-        
+         print("has perform attack");
         // Check if player is in front of the enemy with a raycast
         HealthComponent targetHealth = target.GetComponent<HealthComponent>();
         targetHealth?.TakeDamage(attackDamage);

@@ -24,6 +24,9 @@ public abstract class Enemy : MonoBehaviour
         navAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
         animator = GetComponent<Animator>();
         
+        if (animator == null){
+            animator = GetComponentInChildren<Animator>();
+        }
         // Initialize from data if provided
         if (enemyData != null)
         {
