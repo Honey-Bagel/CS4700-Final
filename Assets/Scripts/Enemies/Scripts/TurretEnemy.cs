@@ -20,6 +20,7 @@ public class TurretEnemy : Enemy
     public float bloomAngle = 5f;
 
     [Header("Idle/Swivel Behavior")]
+    public GameObject swivel;
     public bool randomSwivel = true;
     public float minSwivelWaitTime = 2f;
     public float maxSwivelWaitTime = 5f;
@@ -41,6 +42,12 @@ public class TurretEnemy : Enemy
     private float nextFireTime;
     private bool isOverheated = false;
     private Quaternion targetRotation;
+    private float lastFired = 0;
+    
+    [Header("Audio Sources")]
+    public AudioSource fireAudio;
+    public AudioSource detectAudio;
+    public AudioSource powerDown;
 
     protected override void Awake()
     {
@@ -139,6 +146,13 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetBool("Attacking", true);
         }
+
+        if (lastFired + (1f / fireRate) + 0.25f < Time.time) {
+            lastFired = Time.time;
+            detectAudio.Play();
+            
+        }
+        
     }
 
     protected override void UpdateAttackState()
@@ -177,6 +191,7 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetBool("Attacking", false);
         }
+        lastFired = Time.time;
     }
 
     protected override void EnterStunnedState()
@@ -187,6 +202,8 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetTrigger("Overheat");
         }
+
+        powerDown.Play();
 
         if(GetComponent<Renderer>() != null) {
             StartCoroutine(FlashOverheat());
@@ -275,8 +292,10 @@ public class TurretEnemy : Enemy
 
     private bool RotateTowardsTarget(Quaternion targetrot)
     {
-        transform.rotation = Quaternion.RotateTowards(transform.rotation, targetrot, swivelSpeed * Time.deltaTime * 60f);
-        float angleDifference = Quaternion.Angle(transform.rotation, targetrot);
+        targetrot *= Quaternion.Euler(0,180,0);
+
+        swivel.transform.rotation = Quaternion.RotateTowards(swivel.transform.rotation, targetrot, swivelSpeed * Time.deltaTime * 60f);
+        float angleDifference = Quaternion.Angle(swivel.transform.rotation, targetrot);
         return angleDifference < rotationThreshold;
     }
 
@@ -302,6 +321,8 @@ public class TurretEnemy : Enemy
         }
 
         if(projectilePrefab != null && firePoint != null) {
+
+            fireAudio.Play();
 
             Vector3 baseDirection = firePoint.forward;
             if (bloomAngle > 0) {
