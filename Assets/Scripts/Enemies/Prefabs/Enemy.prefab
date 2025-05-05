@@ -82,7 +82,7 @@ MonoBehaviour:
   pathTimeout: 3
   stuckDistance: 0.5
   attackDamage: 20
-  attackCooldown: 0.5
+  attackCooldown: 2
   requireLineOfSight: 1
   obstacleLayerMask:
     serializedVersion: 2
