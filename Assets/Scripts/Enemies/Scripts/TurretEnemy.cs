@@ -47,7 +47,7 @@ public class TurretEnemy : Enemy
     [Header("Audio Sources")]
     public AudioSource fireAudio;
     public AudioSource detectAudio;
-    
+    public AudioSource powerDown;
 
     protected override void Awake()
     {
@@ -202,6 +202,8 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetTrigger("Overheat");
         }
+
+        powerDown.Play();
 
         if(GetComponent<Renderer>() != null) {
             StartCoroutine(FlashOverheat());
