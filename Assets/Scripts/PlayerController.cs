@@ -8,6 +8,7 @@ using System.Collections.Generic;
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(StaminaComponent))]
 [RequireComponent(typeof(HealthComponent))]
+[RequireComponent(typeof(AudioSource))] 
 public class PlayerController : MonoBehaviour, ISaveable, IDamageable
 {
     [SerializeField]
@@ -21,16 +22,17 @@ public class PlayerController : MonoBehaviour, ISaveable, IDamageable
     public float maxFallSpeed = 0.15f;
     public float jumpForce = .04f;
     public InventoryHandler playerInventory;
-    //Should probably pull this out to a setting eventually
-    private float mouseSensitivity = 1f;
 
+    // Should probably pull this out to a setting eventually
+    private float mouseSensitivity = 1f;
     private float verticalViewClamp = 90f;
 
-    CharacterController characterController;
+    // Core components
+    private CharacterController characterController;
     private Vector3 movementVelocity = Vector3.zero;
-    private float xRotation = 0;
+    private float   xRotation        = 0f;
 
-    //Interaction stuff
+    // Interaction stuff
     [Header("UI Elements")]
     public GameObject interactionTooltip;
     public TextMeshProUGUI itemNameText;
@@ -39,15 +41,48 @@ public class PlayerController : MonoBehaviour, ISaveable, IDamageable
     public TextMeshProUGUI scrapCountText;
     public TextMeshProUGUI scrapCountTarget;
     public LayerMask interactableLayerMask;
-
     private float interactionRange = 4f;
     private I_Interactable currentInteractable;
 
-    // Components
+    // Stamina & Health
     public StaminaComponent staminaComponent;
-    public float runningStaminaRate = 10.0f;
-    public float jumpStaminaUse = 25.0f;
-    
+    public float runningStaminaRate = 10f;
+    public float jumpStaminaUse     = 25f;
+
+    // Footstep one-shots
+    [Header("Footstep SFX")]
+    [SerializeField] private AudioClip[] footstepSounds;
+    [SerializeField] private float      stepDistance = 2f;
+    private AudioSource _sfx;
+    private Vector3     _lastPos;
+    private float       _accumDistance;
+
+    // ── Walking Loop ──
+    [Header("Walking Loop")]
+    [SerializeField] private AudioClip walkLoopClip;
+    private AudioSource _walkLoopAudio;
+    // ─────────────────
+
+    void Awake()
+    {
+        // Cache CharacterController early
+        characterController = GetComponent<CharacterController>();
+
+        // Setup one-shot SFX source
+        _sfx = GetComponent<AudioSource>();
+        _sfx.playOnAwake = false;
+
+        // Setup looping walk source
+        _walkLoopAudio             = gameObject.AddComponent<AudioSource>();
+        _walkLoopAudio.clip        = walkLoopClip;
+        _walkLoopAudio.loop        = true;
+        _walkLoopAudio.playOnAwake = false;
+        _walkLoopAudio.Stop();
+
+        // Initialize distance tracker
+        _lastPos = transform.position;
+    }
+
     void Start()
     {
         GameManager.OnLevelSetupFinished += OnLevelReady;
@@ -66,236 +101,206 @@ public class PlayerController : MonoBehaviour, ISaveable, IDamageable
 
     private void OnLevelReady()
     {
-        characterController = GetComponent<CharacterController>();
-        playerInventory = GetComponent<InventoryHandler>();
+        // Finish grabbing components after level load
+        playerInventory  = GetComponent<InventoryHandler>();
         staminaComponent = GetComponent<StaminaComponent>();
 
         Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-        
-        // Notify the GameManager that the player is ready
-        GameManager.Instance.SetPlayerReady();
+        Cursor.visible   = false;
 
+        // Notify GameManager
+        GameManager.Instance.SetPlayerReady();
         scrapCountTarget.text = GameManager.Instance.TargetScrapCount.ToString();
 
-        if(interactionTooltip != null)
-        {
+        if (interactionTooltip != null)
             interactionTooltip.SetActive(false);
-        }
 
         GameManager.OnLevelSetupFinished -= OnLevelReady;
     }
 
     void Update()
     {
-        if(GameManager.Instance == null || GameManager.Instance.IsPlayerReady == false)
-        {
+        // Wait until GameManager says we’re good
+        if (GameManager.Instance == null || !GameManager.Instance.IsPlayerReady)
             return;
-        }
-        if(scrapCountText != null)
-        {
+
+        // Update UI scrap count
+        if (scrapCountText != null)
             scrapCountText.text = GameManager.Instance.ScrapTowardsTarget.ToString();
-        }
-            // Update scrap count in UI
-        
-        // Movement code remains the same
+
+        // Calculate movement
         Vector3 forwardVector = transform.TransformDirection(Vector3.forward);
-        Vector3 rightVector = transform.TransformDirection(Vector3.right);
+        Vector3 rightVector   = transform.TransformDirection(Vector3.right);
+        Vector3 inputVector   = new Vector3(Input.GetAxis("Vertical"), 0f, Input.GetAxis("Horizontal"));
 
-        Vector3 inputVector = new Vector3(Input.GetAxis("Vertical"), 0f, Input.GetAxis("Horizontal"));
+        bool isRunning = Input.GetKey(KeyCode.LeftShift)
+                         && inputVector.magnitude > 0f
+                         && staminaComponent.UseStamina(runningStaminaRate * Time.deltaTime, true);
 
-        bool isRunning = Input.GetKey(KeyCode.LeftShift) && inputVector.magnitude > 0f && staminaComponent.UseStamina(runningStaminaRate * Time.deltaTime, true);
-        float xVelocity = (isRunning ? runSpeed : walkSpeed) * inputVector.x * Time.deltaTime;
-        float zVelocity = (isRunning ? runSpeed : walkSpeed) * inputVector.z * Time.deltaTime;
-        float yVelocity = movementVelocity.y;
-        movementVelocity = (forwardVector * xVelocity) + (rightVector * zVelocity);
+        float xVel = (isRunning ? runSpeed : walkSpeed) * inputVector.x * Time.deltaTime;
+        float zVel = (isRunning ? runSpeed : walkSpeed) * inputVector.z * Time.deltaTime;
+        float yVel = movementVelocity.y;
 
-        if (Input.GetKey(KeyCode.Space) && characterController.isGrounded && staminaComponent.UseStamina(jumpStaminaUse, false))
+        movementVelocity = forwardVector * xVel + rightVector * zVel;
+
+        // Jump logic
+        if (Input.GetKey(KeyCode.Space)
+            && characterController.isGrounded
+            && staminaComponent.UseStamina(jumpStaminaUse, false))
         {
             movementVelocity.y = jumpForce;
         }
         else
         {
-            movementVelocity.y = yVelocity;
+            movementVelocity.y = yVel;
         }
 
+        // Apply gravity
         if (!characterController.isGrounded)
         {
-            movementVelocity.y = Mathf.Clamp(movementVelocity.y - gravity * Time.deltaTime, -maxFallSpeed, float.PositiveInfinity);
+            movementVelocity.y = Mathf.Clamp(
+                movementVelocity.y - gravity * Time.deltaTime,
+               -maxFallSpeed,
+                float.PositiveInfinity
+            );
         }
 
+        // Move character
         characterController.Move(movementVelocity);
 
-        // Camera Rotation
+        // ── Play/Stop looping walk sound ──
+        bool isWalking = characterController.isGrounded && movementVelocity.magnitude > 0.1f;
+        if (isWalking && !_walkLoopAudio.isPlaying)
+            _walkLoopAudio.Play();
+        else if (!isWalking && _walkLoopAudio.isPlaying)
+            _walkLoopAudio.Stop();
+        // ──────────────────────────────────
+
+        // Footstep one-shots (optional)
+        float delta = Vector3.Distance(transform.position, _lastPos);
+        _accumDistance += delta;
+        if (_accumDistance >= stepDistance && IsWalking())
+        {
+            PlayFootstep();
+            _accumDistance = 0f;
+        }
+        _lastPos = transform.position;
+
+        // Camera rotation
         xRotation += -Input.GetAxis("Mouse Y") * mouseSensitivity;
-        xRotation = Mathf.Clamp(xRotation, -verticalViewClamp, verticalViewClamp);
+        xRotation  = Mathf.Clamp(xRotation, -verticalViewClamp, verticalViewClamp);
         playerCamera.transform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         transform.rotation *= Quaternion.Euler(0, Input.GetAxis("Mouse X") * mouseSensitivity, 0);
 
+        // Interactions
         CheckForInteractable();
-        
-        // pickup interaction
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-
-            Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hitInfo;
-
-            Debug.DrawRay(ray.origin, ray.direction * 2, Color.red, 2f);
-
-            if (Physics.Raycast(ray, out hitInfo, 4, LayerMask.GetMask("Default"), QueryTriggerInteraction.Ignore)){
-
-                I_Interactable interactable = hitInfo.collider.gameObject.GetComponent<I_Interactable>();
-                if(interactable != null)
-                {
-                    interactable.Interact(gameObject);
-
-                    if(interactable is PickableItem item)
-                    {
-                        print("pick up " + item.name);
-                        playerInventory.Equip(item);
-                        Destroy(item.gameObject);
-
-                        currentInteractable = null;
-
-                        if(interactionTooltip != null)
-                        {
-                            interactionTooltip.SetActive(false);
-                        }
-                    }
-                }
-            }
-
-        }
-
-        // drop interaction
-        if (Input.GetKeyDown(KeyCode.G))
-        {
-            playerInventory.Drop();
-        }
-        else if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            playerInventory.UsePrimary();
-        }
+        if (Input.GetKeyDown(KeyCode.E))      HandlePickup();
+        else if (Input.GetKeyDown(KeyCode.G)) playerInventory.Drop();
+        else if (Input.GetKeyDown(KeyCode.Mouse0)) playerInventory.UsePrimary();
     }
 
     private void CheckForInteractable()
     {
         Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
         RaycastHit hitInfo;
-
-        // Debug ray
         Debug.DrawRay(ray.origin, ray.direction * interactionRange, Color.yellow);
 
         if (Physics.Raycast(ray, out hitInfo, interactionRange, interactableLayerMask, QueryTriggerInteraction.Ignore))
         {
-            I_Interactable interactable = hitInfo.collider.gameObject.GetComponent<I_Interactable>();
+            var interactable = hitInfo.collider.GetComponent<I_Interactable>();
             if (interactable != null)
             {
-                // Found an interactable
                 currentInteractable = interactable;
-                
-                // Update tooltip text
-                if (interactionTooltip != null)
+                ShowTooltip(interactable, hitInfo);
+                return;
+            }
+        }
+
+        currentInteractable = null;
+        interactionTooltip?.SetActive(false);
+    }
+
+    private void ShowTooltip(I_Interactable interactable, RaycastHit hitInfo)
+    {
+        itemNameText.text        = interactable.GetInteractableName();
+        itemDescriptionText.text = interactable.GetInteractableDescription();
+
+        Vector3 tooltipWorldPos = interactable.GetTooltipAnchor()?.position
+            ?? hitInfo.transform.position + Vector3.up * 0.5f;
+
+        Vector2 screenPoint = playerCamera.WorldToScreenPoint(tooltipWorldPos);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            canvasRect, screenPoint, null, out Vector2 canvasPos);
+
+        interactionTooltip.GetComponent<RectTransform>().localPosition = canvasPos;
+        interactionTooltip.SetActive(true);
+    }
+
+    private void HandlePickup()
+    {
+        Ray ray = playerCamera.ScreenPointToRay(Input.mousePosition);
+        if (Physics.Raycast(ray, out RaycastHit hit, 4f, LayerMask.GetMask("Default")))
+        {
+            var interactable = hit.collider.GetComponent<I_Interactable>();
+            if (interactable != null)
+            {
+                interactable.Interact(gameObject);
+                if (interactable is PickableItem item)
                 {
-                    // Set text content
-                    itemNameText.text = interactable.GetInteractableName();
-                    itemDescriptionText.text = interactable.GetInteractableDescription();
-                    
-                    // Check if the interactable has a custom tooltip anchor
-                    Vector3 tooltipPosition;
-                    Transform tooltipAnchor = interactable.GetTooltipAnchor();
-                    
-                    if (tooltipAnchor != null)
-                    {
-                        // Use the custom anchor position
-                        tooltipPosition = tooltipAnchor.position;
-                    }
-                    else
-                    {
-                        // Fall back to the default positioning method
-                        float offsetPosY = hitInfo.transform.position.y + 0.5f;
-                        tooltipPosition = new Vector3(hitInfo.transform.position.x, offsetPosY, hitInfo.transform.position.z);
-                    }
-                    
-                    // Convert world position to screen position
-                    Vector2 screenPoint = playerCamera.WorldToScreenPoint(tooltipPosition);
-                    
-                    // Convert screen position to Canvas local position
-                    Vector2 canvasPos;
-                    RectTransformUtility.ScreenPointToLocalPointInRectangle(canvasRect, screenPoint, null, out canvasPos);
-                    
-                    // Set tooltip position in canvas space
-                    interactionTooltip.GetComponent<RectTransform>().localPosition = canvasPos;
-                    
-                    // Make tooltip visible
-                    interactionTooltip.SetActive(true);
+                    Debug.Log($"pick up {item.name}");
+                    playerInventory.Equip(item);
+                    Destroy(item.gameObject);
+                    interactionTooltip?.SetActive(false);
                 }
             }
-            else
-            {
-                // Not looking at an interactable
-                currentInteractable = null;
-                if (interactionTooltip != null)
-                    interactionTooltip.SetActive(false);
-            }
         }
-        else
-        {
-            // Nothing hit
-            currentInteractable = null;
-            if (interactionTooltip != null)
-                interactionTooltip.SetActive(false);
-        }
-    }
-    
-    // ISaveable implementation
-    public SaveableData SaveState()
-    {
-        return new PlayerData
-        {
-            // Only store player-specific data here
-            // Game state data like deaths is managed by GameManager
-        };
     }
 
-    public void LoadState(SaveableData saveData)
+    // Footstep helpers
+    private bool IsWalking()
     {
-        if (saveData is PlayerData data)
-        {
-            // Only load player-specific data here
-            // Game state data like deaths is managed by GameManager
-        }
-    }
-    
-    public string GetUniqueID()
-    {
-        return uniqueID;
+        return characterController.isGrounded
+            && (Input.GetAxis("Vertical")   != 0 ||
+                Input.GetAxis("Horizontal") != 0);
     }
 
-    public void ApplyUpgrades(Dictionary<Upgrade, int> upgrades) {
+    private void PlayFootstep()
+    {
+        if (footstepSounds?.Length > 0)
+            _sfx.PlayOneShot(footstepSounds[UnityEngine.Random.Range(0, footstepSounds.Length)]);
+    }
+
+    // ISaveable
+    public SaveableData SaveState()       => new PlayerData();
+    public void LoadState(SaveableData d) { if (d is PlayerData) {/*…*/} }
+    public string GetUniqueID()           => uniqueID;
+
+    // Upgrades & damage
+    public void ApplyUpgrades(Dictionary<Upgrade,int> ups)
+    {
         Debug.Log("Adding upgrades to Player");
-        foreach(var upgrade in upgrades) {
-            switch(upgrade.Key.upgradeType) {
+        foreach (var kv in ups)
+        {
+            switch (kv.Key.upgradeType)
+            {
                 case UpgradeType.Health:
-                    HealthComponent healthComponent = GetComponent<HealthComponent>();
-                    healthComponent.MaxHealth += upgrade.Key.modifier * upgrade.Value;
+                    GetComponent<HealthComponent>().MaxHealth += kv.Key.modifier * kv.Value;
                     break;
                 case UpgradeType.Speed:
-                    runSpeed += upgrade.Key.modifier * upgrade.Value;
-                    walkSpeed += upgrade.Key.modifier * upgrade.Value;
+                    runSpeed += kv.Key.modifier * kv.Value;
+                    walkSpeed += kv.Key.modifier * kv.Value;
                     break;
                 case UpgradeType.Damage:
-                    // Apply damage upgrade logic here
+                    // …
                     break;
                 case UpgradeType.StaminaIncrease:
-                    staminaComponent.MaxStamina += upgrade.Key.modifier * upgrade.Value;
+                    staminaComponent.MaxStamina += kv.Key.modifier * kv.Value;
                     break;
                 case UpgradeType.StaminaRecharge:
-                    staminaComponent.staminaRegenRate += upgrade.Key.modifier * upgrade.Value;
+                    staminaComponent.staminaRegenRate += kv.Key.modifier * kv.Value;
                     break;
                 default:
-                    Debug.LogWarning("Unknown upgrade type: " + upgrade.Key.upgradeType);
+                    Debug.LogWarning($"Unknown upgrade: {kv.Key.upgradeType}");
                     break;
             }
         }
@@ -307,13 +312,9 @@ public class PlayerController : MonoBehaviour, ISaveable, IDamageable
         GameManager.Instance.LevelFailed();
     }
 
-    public void TakeDamage(int damageAmount)
+    public void TakeDamage(int dmg)
     {
-        HealthComponent healthComponent = GetComponent<HealthComponent>();
-        if (healthComponent != null)
-        {
-            healthComponent.TakeDamage(damageAmount);
-        }
+        GetComponent<HealthComponent>()?.TakeDamage(dmg);
     }
 }
 
