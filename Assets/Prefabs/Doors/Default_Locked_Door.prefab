@@ -127,7 +127,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 203820f6b04429e45922b28b4591a89f, type: 2}
+  - {fileID: 2100000, guid: ea19b0a0f35c12b4cb107996b36fb9b9, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -182,6 +182,7 @@ MonoBehaviour:
   smooth: 2
   TooltipAnchor: {fileID: 3495910733897115257}
   usePlayerPositionForDirection: 1
+  isOpen: 0
 --- !u!1 &7736677156017304377
 GameObject:
   m_ObjectHideFlags: 0
