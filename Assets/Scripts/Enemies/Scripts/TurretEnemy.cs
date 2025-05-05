@@ -42,6 +42,12 @@ public class TurretEnemy : Enemy
     private float nextFireTime;
     private bool isOverheated = false;
     private Quaternion targetRotation;
+    private float lastFired = 0;
+    
+    [Header("Audio Sources")]
+    public AudioSource fireAudio;
+    public AudioSource detectAudio;
+    
 
     protected override void Awake()
     {
@@ -140,6 +146,13 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetBool("Attacking", true);
         }
+
+        if (lastFired + (1f / fireRate) + 0.25f < Time.time) {
+            lastFired = Time.time;
+            detectAudio.Play();
+            
+        }
+        
     }
 
     protected override void UpdateAttackState()
@@ -178,6 +191,7 @@ public class TurretEnemy : Enemy
         if(animator != null) {
             animator.SetBool("Attacking", false);
         }
+        lastFired = Time.time;
     }
 
     protected override void EnterStunnedState()
@@ -305,6 +319,8 @@ public class TurretEnemy : Enemy
         }
 
         if(projectilePrefab != null && firePoint != null) {
+
+            fireAudio.Play();
 
             Vector3 baseDirection = firePoint.forward;
             if (bloomAngle > 0) {
