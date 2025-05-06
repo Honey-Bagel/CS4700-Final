@@ -82,6 +82,13 @@ public class Generator : MonoBehaviour
 
     void Start()
     {
+        float modifier = UnityEngine.Random.Range(0.8f, 1.2f);
+        float difficultyFactor = 1.0f + (GameManager.Instance.Difficulty * 0.1f);
+        float levelFactor = 1.0f + (GameManager.Instance.CurrentLevel * 0.05f);
+
+        // Adjust the number of rooms based on the current level
+        numberOfRooms = Mathf.RoundToInt(numberOfRooms * modifier * difficultyFactor * levelFactor);
+
         if(!IsSceneBeingLoadedAsync()) {
             StartGeneration();
         }

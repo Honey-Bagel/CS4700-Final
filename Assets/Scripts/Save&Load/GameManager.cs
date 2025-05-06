@@ -52,6 +52,8 @@ public class GameManager : MonoBehaviour
 
     [SerializeField]
     public Dictionary<Upgrade, int> upgrades = new Dictionary<Upgrade, int>();
+
+    public float overallModifier;
     
     private void Awake()
     {
@@ -83,11 +85,11 @@ public class GameManager : MonoBehaviour
     // Level control
     public void CompleteLevel()
     {
-        // if(ScrapTowardsTarget < TargetScrapCount)
-        // {
-        //     Debug.LogWarning("Not enough scrap");
-        //     return;
-        // }
+        if(ScrapTowardsTarget < TargetScrapCount)
+        {
+            Debug.LogWarning("Not enough scrap");
+            return;
+        }
         CurrentLevel++;
         OnLevelCompleted?.Invoke();
         SaveGame();
@@ -145,6 +147,8 @@ public class GameManager : MonoBehaviour
         float modifier = UnityEngine.Random.Range(0.8f, 1.2f);
         float difficultyFactor = 1.0f + (Difficulty * 0.1f);
         float levelFactor = 1.0f + (CurrentLevel * 0.05f);
+
+        overallModifier = modifier * difficultyFactor * levelFactor;
 
         TargetScrapCount = Mathf.RoundToInt(300 * modifier * difficultyFactor * levelFactor);
 
