@@ -5,6 +5,7 @@ using UnityEngine.AI;
 using UnityEngine.UIElements;
 
 [RequireComponent(typeof(BoxCollider))]
+[RequireComponent(typeof(AudioSource))]
 public class Door : MonoBehaviour, I_Interactable
 {
     public bool isLocked = false;
@@ -25,11 +26,19 @@ public class Door : MonoBehaviour, I_Interactable
     private BoxCollider boxCollider;
     private NavMeshObstacle navMeshObstacle;  // Optional NavMesh obstacle for door
 
+    [Header("Door SFX")]
+    [SerializeField] private AudioClip openClip;
+    [SerializeField] private AudioClip closeClip;
+    private AudioSource  _audio;
+
     void Awake()
     {
         animator = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider>();
         navMeshObstacle = GetComponent<NavMeshObstacle>();
+
+        _audio = GetComponent<AudioSource>();
+        _audio.playOnAwake = false;  // Don't play anything on start
 
         if(doorPivot == null)
         {
@@ -95,6 +104,13 @@ public class Door : MonoBehaviour, I_Interactable
         else
         {
             StartCoroutine(AnimateDoor(isOpen));
+        }
+
+        if (_audio != null)
+        {
+            var clip = isOpen ? openClip : closeClip;
+            if (clip != null)
+                _audio.PlayOneShot(clip);
         }
 
         Debug.Log(isOpen ? "Door opened" : "Door closed");
