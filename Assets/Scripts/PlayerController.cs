@@ -181,8 +181,8 @@ public class PlayerController : MonoBehaviour, ISaveable, IDamageable
         _accumDistance += delta;
         if (_accumDistance >= stepDistance && IsWalking())
         {
-            PlayFootstep();
-            _accumDistance = 0f;
+            // PlayFootstep();
+            // _accumDistance = 0f;
         }
         _lastPos = transform.position;
 

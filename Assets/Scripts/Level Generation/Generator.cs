@@ -78,6 +78,8 @@ public class Generator : MonoBehaviour
         if(OnLevelGenerationComplete != null) {
             OnLevelGenerationComplete.Invoke();
         }
+
+        DisableDoorwayColliders();
     }
 
     void Start()
@@ -627,5 +629,20 @@ public class Generator : MonoBehaviour
         
         // Fallback (should never reach here if weights > 0)
         return availablePrefabs[0].roomPrefab;
+    }
+
+    private void DisableDoorwayColliders()
+    {
+        foreach(GameObject room in rooms)
+        {
+            Doorway[] doorways = room.GetComponentsInChildren<Doorway>();
+            foreach(Doorway door in doorways)
+            {
+                if(door != null && door.GetComponent<Collider>() != null)
+                {
+                    door.GetComponent<Collider>().enabled = false;
+                }
+            }
+        }
     }
 }
