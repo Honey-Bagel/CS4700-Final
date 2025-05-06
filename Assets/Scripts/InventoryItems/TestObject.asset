@@ -15,7 +15,7 @@ MonoBehaviour:
   objectPrefab: {fileID: 5325353682980606589, guid: 4f86cf462e53ee544a1854e7f6ad7319, type: 3}
   objectName: Test Object
   sprite: {fileID: 21300000, guid: 0ec022de2fd856243809f80580ad9a40, type: 3}
-  objectPrice: 40
+  objectPrice: 60
   weight: 1
   holdVector3: {x: 0, y: 0, z: 0}
   holdQuaternion: {x: 0, y: 0, z: 0, w: 0}
